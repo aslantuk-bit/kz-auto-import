@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ввоз авто в Казахстан</title>
+<meta name="description" content="Все платежи при ввозе автомобиля в Казахстан с постановкой на учёт: пошлина, НДС, акциз, утильсбор, сбор за регистрацию — по шести маршрутам, с нормой у каждого платежа. Ставки на 15.10.2026.">
+<meta property="og:title" content="Ввоз авто в Казахстан — калькулятор платежей">
+<meta property="og:description" content="Сколько стоит растаможить и поставить на учёт машину в РК: шесть маршрутов, нормы, аналитика. Ставки на 15.10.2026.">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/png" href="icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Unbounded:wght@500;600&display=swap">
+<link rel="stylesheet" href="style.css?v=1.0.0">
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <h1>Ввоз авто в Казахстан</h1>
+      <span class="asof">Ставки на 15.10.2026 · МРП 4 325 тг · EUR 504,20 тг</span>
+    </div>
+    <p class="lede">Все платежи при ввозе легкового автомобиля с постановкой на учёт: пошлина, НДС, акциз, утильсбор, сбор за регистрацию, техпаспорт и номера. Сразу по шести маршрутам, у каждого платежа указана норма.</p>
+  </div>
+</header>
+<nav class="tabs" aria-label="Разделы">
+  <div class="wrap" role="tablist">
+    <button role="tab" data-tab="calc" aria-selected="true">Калькулятор</button>
+    <button role="tab" data-tab="analytics" aria-selected="false">Аналитика</button>
+    <button role="tab" data-tab="rates" aria-selected="false">База ставок</button>
+    <button role="tab" data-tab="questions" aria-selected="false">Спорные вопросы</button>
+    <button role="tab" data-tab="about" aria-selected="false">О данных</button>
+  </div>
+</nav>
+
+<main>
+  <div class="wrap">
+
+    <section id="calc" role="tabpanel">
+      <div class="calc">
+        <div class="card">
+          <form class="car" id="car" autocomplete="off">
+            <div class="field">
+              <label for="price">Стоимость</label>
+              <div class="row-price">
+                <input type="number" id="price" min="0" step="500" value="15000" inputmode="decimal">
+                <select id="cur" aria-label="Валюта">
+                  <option>EUR</option><option>USD</option><option>CNY</option><option>RUB</option><option>KZT</option>
+                </select>
+              </div>
+              <p class="hint">Цена сделки плюс доставка до границы ЕАЭС. Для ПТД — цена покупки без доставки.</p>
+            </div>
+            <div class="field">
+              <label for="fuel">Двигатель</label>
+              <select id="fuel">
+                <option value="бензин">Бензин</option>
+                <option value="дизель">Дизель</option>
+                <option value="гибрид_двс">Гибрид (мощнее ДВС)</option>
+                <option value="гибрид_эл">Гибрид (мощнее электромотор)</option>
+                <option value="электро">Электромобиль</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="cc">Объём двигателя, см³</label>
+              <input type="number" id="cc" min="0" max="9000" step="100" value="2000" inputmode="numeric">
+            </div>
+            <div class="row2">
+              <div class="field"><label for="year">Год выпуска</label><select id="year"></select></div>
+              <div class="field"><label for="month">Месяц выпуска</label><select id="month"></select></div>
+            </div>
+            <label class="check"><input type="checkbox" id="market"> Добавить рыночные расходы</label>
+            <p class="hint">ОГПО, брокер, СВХ, СБКТС, ЭПТС — по серединам рыночных диапазонов, это не госплатежи.</p>
+            <button type="button" class="btn" id="share">Скопировать ссылку на расчёт</button>
+            <p class="hint" id="share-status" aria-live="polite"></p>
+          </form>
+        </div>
+
+        <div class="stack">
+          <div class="card verdict">
+            <div class="best" id="best">—</div>
+            <div class="figures">
+              <div class="figure"><div class="label">Платежи</div><div class="value" id="best-total">—</div></div>
+              <div class="figure"><div class="label">От стоимости машины</div><div class="value" id="best-share">—</div></div>
+            </div>
+            <div class="subline" id="ages">—</div>
+          </div>
+          <div class="card">
+            <div class="toolbar">
+              <h2 class="section-title">Сравнение маршрутов</h2>
+              <label class="check"><input type="checkbox" id="show-ru"> Показать Россию и Беларусь на графике</label>
+            </div>
+            <div class="chart" id="cmp-chart"></div>
+            <div class="legend" id="cmp-legend"></div>
+            <p class="note" id="ru-note"></p>
+            <div class="table-wrap" style="margin-top:12px"><table id="cmp-table"></table></div>
+          </div>
+          <div class="card">
+            <h2 class="section-title">Разбивка по маршруту</h2>
+            <div class="seg" id="route-seg" style="margin:10px 0 12px"></div>
+            <p class="note" id="route-who"></p>
+            <div class="table-wrap"><table id="route-table"></table></div>
+            <div class="flags" id="route-flags"></div>
+            <p class="note" id="route-tax" style="margin-top:10px"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="analytics" role="tabpanel" hidden>
+      <div class="stack">
+        <div class="card stack">
+          <div>
+            <h2 class="section-title">Машина-ориентир</h2>
+            <p class="note">Графики пересчитываются для выбранной машины. Расчёт по тем же формулам, что и калькулятор: 9 двигателей × 12 возрастов × 6 цен × 6 маршрутов.</p>
+          </div>
+          <div class="controls">
+            <div class="field"><label for="an-engine">Двигатель</label><select id="an-engine"></select></div>
+            <div class="field"><label for="an-price">Стоимость, €</label><select id="an-price"></select></div>
+            <div class="field"><label for="an-age">Возраст, лет</label><select id="an-age"></select></div>
+          </div>
+          <ul class="findings" id="findings"></ul>
+          <label class="check"><input type="checkbox" id="an-ru"> Показывать Россию и Беларусь</label>
+        </div>
+        <div class="card">
+          <h2 class="section-title">Из чего складывается платёж</h2>
+          <p class="note">Обязательные платежи без рыночных расходов.</p>
+          <div class="chart" id="an-struct"></div><div class="legend" id="an-struct-legend"></div>
+        </div>
+        <div class="grid2">
+          <div class="card">
+            <h2 class="section-title">Возраст: скачок на трёх годах</h2>
+            <p class="note">С трёх лет сбор за регистрацию — 500 МРП (2,16 млн тг) вместо 50, пошлина по ДТ переходит на ставки для б/у. По ПТД старше 5 лет ставка выше — второй скачок.</p>
+            <div class="chart" id="an-age-chart"></div><div class="legend" id="an-age-legend"></div>
+          </div>
+          <div class="card">
+            <h2 class="section-title">Цена: фиксированные платежи бьют по дешёвым машинам</h2>
+            <p class="note">Утильсбор, сбор за регистрацию и минимумы пошлины в €/см³ не зависят от цены.</p>
+            <div class="chart" id="an-price-chart"></div><div class="legend" id="an-price-legend"></div>
+          </div>
+        </div>
+        <div class="card">
+          <h2 class="section-title">ПТД или ДТ для физлица</h2>
+          <p class="note">Разница «ПТД минус ДТ», млн тг. Синий — ПТД дешевле, красный — дороже. По ДТ машина выпускается условно по ставкам ВТО и обращается только в РК. С 26.09.2026 ЭПТС по ПТД оформляют только на машины до 5 лет (приказ МПС № 474, по СМИ).</p>
+          <div style="overflow-x:auto"><div class="heat" id="an-heat"></div></div>
+        </div>
+        <div class="grid2">
+          <div class="card">
+            <h2 class="section-title">Тип двигателя</h2>
+            <p class="note">Маршрут «Третьи страны · ДТ». Электромобиль и гибрид с более мощным электромотором — пошлина 0% по перечню ВТО и без утильсбора.</p>
+            <div class="chart" id="an-engines"></div><div class="legend" id="an-engines-legend"></div>
+          </div>
+          <div class="card">
+            <h2 class="section-title">Утильсбор: Россия и Беларусь против остальных</h2>
+            <p class="note">Легковые M1, 50 МРП × коэффициент. Коэффициент 2 для ввоза из РФ и РБ действует с 07–08.05.2026 (приказ МЭПР № 54).</p>
+            <div class="chart" id="an-util"></div><div class="legend" id="an-util-legend"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="rates" role="tabpanel" hidden>
+      <div class="card stack">
+        <div>
+          <h2 class="section-title">База ставок</h2>
+          <p class="note">Каждая ставка — с нормой и уровнем достоверности: А — текст акта, Б — разъяснение госоргана, В — СМИ, Г — рыночная оценка, Д — спорно. Щёлкните строку, чтобы раскрыть подробности.</p>
+        </div>
+        <div class="filters">
+          <div class="field wide"><label for="r-q">Поиск</label><input type="search" id="r-q" placeholder="электромобиль, 8703 23, ст. 615, Решение № 59"></div>
+          <div class="field"><label for="r-block">Блок</label><select id="r-block"><option value="">все блоки</option></select></div>
+          <div class="field"><label for="r-rel">Достоверность</label><select id="r-rel">
+            <option value="">любая</option><option value="А">А — текст акта</option><option value="Б">Б — разъяснение</option>
+            <option value="В">В — СМИ</option><option value="Г">Г — рыночная оценка</option><option value="Д">Д — спорно</option></select></div>
+          <label class="check"><input type="checkbox" id="r-cur" checked> Только действующие</label>
+        </div>
+        <p class="note" id="r-count"></p>
+        <div class="table-wrap rates-table"><table id="r-table"></table></div>
+      </div>
+    </section>
+
+    <section id="questions" role="tabpanel" hidden>
+      <div class="card">
+        <h2 class="section-title">Спорные вопросы</h2>
+        <p class="note">Что не подтверждено первоисточником или трактуется по-разному, и как это учтено в расчётах.</p>
+        <div id="q-list"></div>
+      </div>
+    </section>
+
+    <section id="about" role="tabpanel" hidden>
+      <div class="stack">
+        <div class="card stack">
+          <h2 class="section-title">О данных</h2>
+          <p>Ставки собраны по текстам нормативных актов на 15.10.2026: Единый таможенный тариф ЕАЭС (Решение Совета ЕЭК № 80), перечень ставок РК по обязательствам ВТО (Решение № 59), ставки для физлиц (Решение № 107), Налоговый кодекс РК от 18.07.2025 № 214-VIII, Правила РОП и Методика утилизационного платежа (приказ МЭПР № 54 от 20.03.2026), постановление Правительства РК № 171 о таможенных сборах.</p>
+          <p>Расчёты справочные и не заменяют таможенную декларацию и разъяснения госорганов. Пошлина считается от таможенной стоимости в евро по курсу НБРК; возраст машины для таможни — полные годы с даты выпуска, для сбора за регистрацию — «включая год выпуска».</p>
+          <p>Исходники, база в Excel и SQLite, приложение для Mac — <a href="https://github.com/aslantuk-bit/kz-auto-import">github.com/aslantuk-bit/kz-auto-import</a>. Лицензия MIT.</p>
+        </div>
+        <div class="card">
+          <h2 class="section-title">Условия ввоза</h2>
+          <p class="note">Запреты и ограничения, которые влияют на ввоз и регистрацию, но не являются платежами.</p>
+          <div class="table-wrap" style="margin-top:10px"><table id="cond-table"></table></div>
+        </div>
+        <div class="card">
+          <h2 class="section-title">Нормативные акты</h2>
+          <div class="table-wrap" style="margin-top:10px"><table id="src-table"></table></div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+<footer><div class="wrap"><span>Ставки на 15.10.2026</span><span>Справочный расчёт, не официальная позиция госорганов</span><a href="https://github.com/aslantuk-bit/kz-auto-import">Исходники на GitHub</a></div></footer>
+<div class="tip" id="tip" hidden></div>
+<script src="calc.js?v=1.0.0"></script>
+<script src="app.js?v=1.0.0"></script>
+</body>
+</html>
