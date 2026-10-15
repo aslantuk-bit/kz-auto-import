@@ -1,0 +1,9 @@
+# Приложение и сборка базы
+pandas==3.0.6
+openpyxl==3.1.5
+streamlit==1.66.0
+altair==6.3.0
+
+# Только для сборки .app (build_app.sh)
+pyinstaller==6.22.3
+pillow==12.3.0
