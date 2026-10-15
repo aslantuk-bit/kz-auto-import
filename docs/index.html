@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Unbounded:wght@500;600&display=swap">
-<link rel="stylesheet" href="style.css?v=1.0.0">
+<link rel="stylesheet" href="style.css?v=1.1.1">
 </head>
 <body>
 <header class="top">
@@ -27,6 +27,7 @@
 <nav class="tabs" aria-label="Разделы">
   <div class="wrap" role="tablist">
     <button role="tab" data-tab="calc" aria-selected="true">Калькулятор</button>
+    <button role="tab" data-tab="savings" aria-selected="false">Как сэкономить</button>
     <button role="tab" data-tab="analytics" aria-selected="false">Аналитика</button>
     <button role="tab" data-tab="rates" aria-selected="false">База ставок</button>
     <button role="tab" data-tab="questions" aria-selected="false">Спорные вопросы</button>
@@ -105,6 +106,10 @@
           </div>
         </div>
       </div>
+    </section>
+
+    <section id="savings" role="tabpanel" hidden>
+      <div class="stack" id="sv"></div>
     </section>
 
     <section id="analytics" role="tabpanel" hidden>
@@ -210,7 +215,7 @@
 </main>
 <footer><div class="wrap"><span>Ставки на 15.10.2026</span><span>Справочный расчёт, не официальная позиция госорганов</span><a href="https://github.com/aslantuk-bit/kz-auto-import">Исходники на GitHub</a></div></footer>
 <div class="tip" id="tip" hidden></div>
-<script src="calc.js?v=1.0.0"></script>
-<script src="app.js?v=1.0.0"></script>
+<script src="calc.js?v=1.1.1"></script>
+<script src="app.js?v=1.1.1"></script>
 </body>
 </html>

@@ -8,7 +8,7 @@
   const pct = (n, d = 0) => n.toFixed(d).replace(".", ",") + "%";
   const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
-  const data = await (await fetch("data.json?v=1.0.0")).json();
+  const data = await (await fetch("data.json?v=1.1.1")).json();
   const K = KZCalc.make(data.constants);
   const C = data.constants;
   const TODAY = { y: 2026, m: 10 };
@@ -228,6 +228,43 @@
     catch { $("#share-status").textContent = url; }
   });
 
+
+  /* ---------- как сэкономить ---------- */
+  function renderSavings() {
+    const d = data.savings, m = (v) => mln(v) + " тг", ev = d.ev.example, a = d.age, v = d.volume, t = d.ptd_dt;
+    const card = (title, body) => `<div class="card stack"><h2 class="section-title">${title}</h2>${body}</div>`;
+    const figs = (items) => `<div class="figures">${items.map(([l, val]) => `<div class="figure"><div class="label">${l}</div><div class="value" style="font-size:clamp(20px,3vw,26px)">${val}</div></div>`).join("")}</div>`;
+    const ageWord = (n) => (n === 1 ? "год" : n >= 2 && n <= 4 ? "года" : "лет");
+    const ptdRows = Object.keys(t.rows).map((age) => `<tr><td>${age} ${ageWord(+age)}</td>${t.rows[age].map((x) => {
+      const val = x / 1e6, s = (val >= 0 ? "+" : "") + val.toFixed(1).replace(".", ",");
+      return `<td class="num" style="color:${val < 0 ? "var(--div-neg)" : "var(--ink-2)"};font-weight:${val < 0 ? 600 : 400}">${s}</td>`; }).join("")}</tr>`).join("");
+    $("#sv").innerHTML = [
+      card("Самый выгодный профиль", `<p style="margin:0;font-size:16px">Электромобиль или машина с ДВС до 2 000 см³, не старше 2 лет по году выпуска, дешевле ${fmt(Math.floor(d.lux.eur / 100) * 100)} €, ввоз из Китая, Кореи или Японии по ДТ. Для дорогой машины 3–5 лет — ПТД.</p>
+        <p class="note">Посчитано тем же калькулятором по ${fmt(d.configs)} машинам × 6 маршрутов: 9 двигателей, возраст 0–15 лет, 12 цен от 5 до 150 тыс. €. Варианты, которые нельзя поставить на учёт, исключены.</p>`),
+      card("Не ввозить через Россию и Беларусь", `<p style="margin:0">В лучшем случае дороже лучшего маршрута на <b>${m(d.ru.min)}</b>, в среднем — на <b>${m(d.ru.median)}</b>. Причина — утильсбор по коэффициенту 2 (приказ МЭПР № 54).</p>`),
+      card("Электромобиль — из третьих стран по ДТ", `<p style="margin:0">Выигрывает в ${d.ev.wins} из ${d.ev.n} вариантов: пошлина 0% по перечню ВТО, утильсбора нет, остаются НДС 16% и сборы. Так же оформляется гибрид, у которого мощнее электромотор.</p>
+        ${figs([["Электромобиль", m(ev["электро"])], ["Гибрид (мощнее электромотор)", m(ev["гибрид_эл"])], ["Бензин 2,0 л", m(ev["бензин"])]])}
+        <p class="note">Машина за ${fmt(d.ev.example_price)} €, 1 год, третьи страны · ДТ.</p>`),
+      card("Возраст: граница — 3 года по году выпуска", `${figs([["2 года вместо 1", "+" + m(a.dt_1_2)], ["3 года вместо 2", "+" + m(a.dt_2_3)], ["ПТД: 6 лет вместо 5", "+" + m(a.ptd_5_6)]])}
+        <p style="margin:0">Сбор за регистрацию считает возраст «включая год выпуска»: машина декабря 2023 года в 2026-м — уже «3 года и старше», января 2024-го — ещё нет. Разница до 2 млн тг может решаться месяцем выпуска.</p>
+        <p class="note">Бензин 2,0 л, ${fmt(a.price)} €, третьи страны · ДТ. Скачок на 3 годах — сбор 500 МРП вместо 50; на 6 годах по ПТД — повышенная единая ставка.</p>`),
+      card("Объём: до 3 000 см³, лучше до 2 000", `<div class="table-wrap"><table><thead><tr><th>Граница</th><th>Что меняется</th><th class="num">Цена перехода</th></tr></thead><tbody>
+        <tr><td>2 000 → 2 100 см³</td><td>утильсбор 3,5 → 5</td><td class="num">+${m(v.v2000_2100)}</td></tr>
+        <tr><td>3 000 → 3 100 см³</td><td>акциз 100 тг за каждый см³ всего объёма, утильсбор 11,5</td><td class="num">+${m(v.v3000_3100)}</td></tr></tbody></table></div>
+        <p style="margin:0">Парадокс ЕТТ: новая бензиновая машина 2,8–3,0 л платит пошлину 12,5% вместо 15%, поэтому новая 2,9 л (${fmt(v.new_2900)} тг) дешевле новой 2,0 л (${fmt(v.new_2000)} тг) той же цены.</p>
+        <p class="note">Машина за ${fmt(v.price)} €; переходы — для 4 лет, сравнение 2,9 и 2,0 л — для 1 года.</p>`),
+      card("ПТД или ДТ для физлица", `<p class="note" style="margin:0">ПТД минус ДТ, млн тг, бензин 2,0 л. Минус (выделен) — ПТД дешевле.</p>
+        <div class="table-wrap"><table><thead><tr><th>Возраст</th>${t.prices.map((p) => `<th class="num">${fmt(p)} €</th>`).join("")}</tr></thead><tbody>${ptdRows}</tbody></table></div>
+        <p style="margin:0">Новые машины выгоднее по ДТ всегда. Для б/у 3–5 лет единая ставка считается от объёма, а не от цены, поэтому с 20 тыс. € ПТД выигрывает всё сильнее. Старше 5 лет — только ДТ: ЭПТС по ПТД не оформят. Минус ДТ — условный выпуск: машина обращается только в РК.</p>`),
+      card("Кыргызстан и Армения: дёшево на бумаге", `<p style="margin:0">По платежам в РК физлицо из Кыргызстана или Армении выигрывает в <b>${Math.round(d.eaeu.by_kz.kg_fl || 0)}%</b> вариантов: пошлины нет, НДС с физлица не берут. Если прибавить пошлину ЕТТ, уже заложенную в цену машины там, — в <b>${Math.round(d.eaeu.by_landed.kg_fl || 0)}%</b>. Это оценка сверху: местный НДС, сборы и маржа перепродавца не учтены.</p>
+        <p style="margin:0">Правило: маршрут выгоден, только если машина там стоит не дороже той же машины в Китае или Корее плюс 15–20%. Регулярный ввоз могут признать предпринимательским — тогда НДС 16%. Электромобили, ввезённые туда по льготе ЕАЭС, резидентам РК передавать нельзя.</p>`),
+      card("Цена и статус ввозящего", `<ul class="findings">
+        <li>Держаться ниже <b>${fmt(Math.floor(d.lux.eur / 100) * 100)} €</b> (${m(d.lux.kzt)}): с этого порога акциз 10%.</li>
+        <li>У машины за ${fmt(d.cheap.price)} € фиксированные платежи составляют ${Math.round(d.cheap.share_min)}–${Math.round(d.cheap.share_max)}% её стоимости.</li>
+        <li>Юрлицо — плательщик НДС берёт ввозной НДС в зачёт, поэтому для бизнеса ДТ реально дешевле, чем в расчётах: модель зачёт не учитывает.</li></ul>`),
+    ].join("");
+  }
+
   /* ---------- аналитика ---------- */
   let grid = null;
   const S = C.SCENARIO;
@@ -353,7 +390,7 @@
       data.sources.map((s) => `<tr><td>${s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.act)}</a>` : esc(s.act)}</td><td class="num">${s.n}</td><td>${esc(s.blocks)}</td></tr>`).join("") + "</tbody>";
   }
 
-  const render = { calc: renderCalc, analytics: renderAnalytics, rates: renderRates, questions: renderQuestions, about: renderAbout };
+  const render = { calc: renderCalc, savings: renderSavings, analytics: renderAnalytics, rates: renderRates, questions: renderQuestions, about: renderAbout };
   let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => render[tabs.find((b) => b.getAttribute("aria-selected") === "true").dataset.tab]?.(), 150); });
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => render.analytics && !$("#analytics").hidden && renderAnalytics());
   showTab(hashTab || "calc", false);

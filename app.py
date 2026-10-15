@@ -6,12 +6,13 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 import streamlit as st  # noqa: E402
 
-from ui import page_analytics, page_calc, page_misc, page_rates  # noqa: E402
+from ui import page_analytics, page_calc, page_misc, page_rates, page_savings  # noqa: E402
 
 st.set_page_config(page_title="Ввоз авто в РК", page_icon=":material/directions_car:", layout="wide")
 
 nav = st.navigation([
     st.Page(page_calc.render, title="Калькулятор", default=True),
+    st.Page(page_savings.render, title="Как сэкономить", url_path="savings"),
     st.Page(page_analytics.render, title="Аналитика", url_path="analytics"),
     st.Page(page_rates.render, title="База ставок", url_path="rates"),
     st.Page(page_misc.questions, title="Спорные вопросы", url_path="questions"),

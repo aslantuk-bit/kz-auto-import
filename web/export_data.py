@@ -14,6 +14,7 @@ sys.path.insert(0, str(ROOT))
 import pandas as pd  # noqa: E402
 
 import calc  # noqa: E402
+import savings  # noqa: E402
 from paths import OUT  # noqa: E402
 
 DOCS = ROOT / "docs"
@@ -75,6 +76,7 @@ def main():
             "условие": "what", "категория_ТС": "category", "субъект": "subject", "правовой_акт": "act",
             "статья": "article", "url": "url", "действует_с": "from", "достоверность": "rel",
             "статус_проверки": "status", "примечание": "note"})),
+        "savings": savings.compute(),
         "sources": records(sources.rename(columns={"правовой_акт": "act", "записей": "n", "блоки": "blocks"})),
     }
     out = DOCS / "data.json"

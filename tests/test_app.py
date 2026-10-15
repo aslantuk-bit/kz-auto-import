@@ -46,6 +46,11 @@ def test_analytics():
     check(at, "аналитика: электромобиль + РФ")
 
 
+def test_savings():
+    at = check(page("ui.page_savings", "render"), "как сэкономить")
+    assert any("Как сэкономить" in t.value for t in at.title)
+
+
 def test_rates():
     at = check(page("ui.page_rates", "render"), "база ставок")
     at.text_input(key="rt_text").set_value("электромобиль")
@@ -59,6 +64,6 @@ def test_misc():
 
 
 if __name__ == "__main__":
-    for t in (test_calc, test_analytics, test_rates, test_misc):
+    for t in (test_calc, test_savings, test_analytics, test_rates, test_misc):
         t()
     print("все страницы отрисованы")
