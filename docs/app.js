@@ -8,7 +8,7 @@
   const pct = (n, d = 0) => n.toFixed(d).replace(".", ",") + "%";
   const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
-  const data = await (await fetch("data.json?v=1.1.1")).json();
+  const data = await (await fetch("data.json?v=1.1.2")).json();
   const K = KZCalc.make(data.constants);
   const C = data.constants;
   const TODAY = { y: 2026, m: 10 };

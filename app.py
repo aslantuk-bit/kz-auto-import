@@ -20,5 +20,6 @@ nav = st.navigation([
 ])
 with st.sidebar:
     st.caption("Ставки на 15.10.2026 · МРП 4 325 тг · EUR 504,20 тг")
+    st.caption("Автор — TAS · Aseke. Бесплатно, в помощь всем, кто везёт машину в Казахстан.")
     page_misc.shutdown()
 nav.run()
