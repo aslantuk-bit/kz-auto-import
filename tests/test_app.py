@@ -68,6 +68,12 @@ def test_vehicles():
         check(at, f"техника: {kind}")
 
 
+def test_deals():
+    at = check(page("ui.page_deals", "render"), "что выгодно ввезти")
+    at.toggle(key="dl_pos").set_value(False)
+    check(at, "что выгодно ввезти: все годы")
+
+
 def test_analytics():
     at = check(page("ui.page_analytics", "render"), "аналитика")
     at.selectbox(key="an_engine").set_value("Электромобиль")
@@ -95,6 +101,6 @@ def test_misc():
 
 
 if __name__ == "__main__":
-    for t in (test_inputs_survive, test_calc, test_vehicles, test_savings, test_analytics, test_rates, test_misc):
+    for t in (test_inputs_survive, test_calc, test_vehicles, test_deals, test_savings, test_analytics, test_rates, test_misc):
         t()
     print("все страницы отрисованы")

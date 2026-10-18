@@ -8,7 +8,7 @@
   const pct = (n, d = 0) => n.toFixed(d).replace(".", ",") + "%";
   const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
-  const data = await (await fetch("data.json?v=1.6.1")).json();
+  const data = await (await fetch("data.json?v=1.7.0")).json();
   const K = KZCalc.make(data.constants);
   const C = data.constants;
   const now = new Date(), TODAY = { y: now.getFullYear(), m: now.getMonth() + 1 };
@@ -362,6 +362,26 @@
   $("#vh-seg").addEventListener("click", (e) => { const b = e.target.closest("button[data-route]"); if (b) { vhRoute = b.dataset.route; renderVehicles(); } });
 
   /* ---------- термины ---------- */
+  /* ---------- что выгодно ввезти ---------- */
+  const DL = data.deals || { rows: [], summary: [] };
+  const dlCats = [...new Set(DL.summary.map((r) => r.категория))];
+  let dlCat = dlCats[0];
+  const signed = (n) => `<span class="${n > 0 ? "gain" : "loss"}">${n > 0 ? "+" : "−"}${mln(Math.abs(n))}</span>`;
+  function renderDeals() {
+    const routes = Object.values(DL.routes || {}).map((r) => r.name).join(", ");
+    $("#dl-meta").textContent = `Kolesa.kz на ${DL.date ? DL.date.slice(0, 10).split("-").reverse().join(".") : "—"}; за рубежом: ${routes}. В расчёт берутся модель и год, где и там, и на Kolesa не меньше ${DL.reliable} объявлений${DL.reliable_other ? ` (мотоциклы и спецтехника: за рубежом от ${DL.reliable_other[0]}, на Kolesa от ${DL.reliable_other[1]} — объявлений меньше, цифры ориентировочные)` : ""}.`;
+    $("#dl-cat").innerHTML = dlCats.map((c) => `<button type="button" data-cat="${esc(c)}" aria-pressed="${c === dlCat}">${esc(c)}</button>`).join("");
+    const sum = DL.summary.filter((r) => r.категория === dlCat);
+    $("#dl-sum").innerHTML = `<thead><tr><th>Модель</th><th>Откуда</th><th class="num">В плюсе</th><th class="num">Медиана выгоды</th><th class="num">Лучший год</th><th class="num">Ввоз / Kolesa</th></tr></thead><tbody>` +
+      sum.map((r) => `<tr><td>${esc(r.модель)}</td><td>${esc(r.страна)}</td><td class="num">${r.в_плюсе} из ${r.годов}</td><td class="num">${signed(r.медиана_выгоды_кзт)}</td><td class="num">${r.лучший_год}: ${signed(r.лучшая_выгода_кзт)}</td><td class="num">${mln(r.лучший_итого_кзт)} / ${mln(r.лучший_kolesa_кзт)}</td></tr>`).join("") + "</tbody>";
+    const pos = $("#dl-pos").checked;
+    const rows = DL.rows.filter((r) => r.категория === dlCat && (!pos || r.выгода_кзт > 0));
+    $("#dl-rows").innerHTML = `<thead><tr><th>Модель</th><th class="num">Год</th><th>Откуда</th><th>Что</th><th class="num">Цена там</th><th class="num">Платежи</th><th class="num">Доставка и услуги</th><th class="num">Ввоз под ключ</th><th class="num">Kolesa</th><th class="num">Выгода</th></tr></thead><tbody>` +
+      rows.map((r) => `<tr><td>${esc(r.модель)}</td><td class="num">${r.год}</td><td>${esc(r.страна)}</td><td>${esc(r.детали || "")}${r.режим ? ` · ${esc(r.режим)}` : ""}</td><td class="num">${mln(r.цена_там_кзт)}</td><td class="num">${mln(r.платежи_кзт)}</td><td class="num">${mln(r.доставка_и_услуги_кзт)}</td><td class="num">${mln(r.итого_ввоз_кзт)}</td><td class="num"><a href="${esc(r.kolesa_url)}" target="_blank" rel="noopener">${mln(r.kolesa_медиана)}</a></td><td class="num">${signed(r.выгода_кзт)} <span class="note">${r.выгода_pct > 0 ? "+" : ""}${String(r.выгода_pct).replace(".", ",")}%</span></td></tr>`).join("") + "</tbody>";
+  }
+  $("#dl-cat").addEventListener("click", (e) => { const b = e.target.closest("button[data-cat]"); if (b) { dlCat = b.dataset.cat; renderDeals(); } });
+  $("#dl-pos").addEventListener("change", renderDeals);
+
   function renderGlossary() {
     const g = data.glossary;
     $("#gl-cmp").innerHTML = `<thead><tr><th></th><th>ДТ — декларация на товары</th><th>ПТД — пассажирская таможенная декларация</th></tr></thead><tbody>` +
@@ -526,7 +546,7 @@
       data.sources.map((s) => `<tr><td>${s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.act)}</a>` : esc(s.act)}</td><td class="num">${s.n}</td><td>${esc(s.blocks)}</td></tr>`).join("") + "</tbody>";
   }
 
-  const render = { calc: renderCalc, vehicles: renderVehicles, savings: renderSavings, analytics: renderAnalytics, rates: renderRates, questions: renderQuestions, about: renderAbout };
+  const render = { calc: renderCalc, vehicles: renderVehicles, deals: renderDeals, savings: renderSavings, analytics: renderAnalytics, rates: renderRates, questions: renderQuestions, about: renderAbout };
   let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => render[tabs.find((b) => b.getAttribute("aria-selected") === "true").dataset.tab]?.(), 150); });
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => render.analytics && !$("#analytics").hidden && renderAnalytics());
   showTab(hashTab || "calc", false);

@@ -1,0 +1,1257 @@
+{
+ "source": "autoscout24.de (8 стран ЕС)",
+ "date": "2026-10-18",
+ "models": {
+  "Yamaha YZF-R1": {
+   "2012": {
+    "n": 5,
+    "med_export_eur": 9000,
+    "p25_export_eur": 8400,
+    "found": 5
+   },
+   "2013": null,
+   "2014": {
+    "n": 4,
+    "med_export_eur": 12244,
+    "p25_export_eur": 11999,
+    "found": 4
+   },
+   "2015": {
+    "n": 9,
+    "med_export_eur": 14300,
+    "p25_export_eur": 12900,
+    "found": 9
+   },
+   "2016": {
+    "n": 5,
+    "med_export_eur": 16800,
+    "p25_export_eur": 15300,
+    "found": 5
+   },
+   "2017": {
+    "n": 9,
+    "med_export_eur": 16000,
+    "p25_export_eur": 14000,
+    "found": 9
+   },
+   "2018": {
+    "n": 10,
+    "med_export_eur": 16495,
+    "p25_export_eur": 15300,
+    "found": 10
+   },
+   "2019": {
+    "n": 8,
+    "med_export_eur": 15750,
+    "p25_export_eur": 15000,
+    "found": 8
+   },
+   "2020": {
+    "n": 12,
+    "med_export_eur": 17200,
+    "p25_export_eur": 16490,
+    "found": 12
+   },
+   "2021": {
+    "n": 8,
+    "med_export_eur": 19350,
+    "p25_export_eur": 17999,
+    "found": 8
+   },
+   "2022": {
+    "n": 5,
+    "med_export_eur": 21200,
+    "p25_export_eur": 21000,
+    "found": 5
+   },
+   "2023": {
+    "n": 15,
+    "med_export_eur": 20900,
+    "p25_export_eur": 19999,
+    "found": 15
+   },
+   "2024": {
+    "n": 20,
+    "med_export_eur": 22500,
+    "p25_export_eur": 20000,
+    "found": 20
+   },
+   "2025": {
+    "n": 5,
+    "med_export_eur": 25000,
+    "p25_export_eur": 21450,
+    "found": 5
+   }
+  },
+  "Yamaha YZF-R6": {
+   "2012": {
+    "n": 3,
+    "med_export_eur": 8500,
+    "p25_export_eur": 8000,
+    "found": 3
+   },
+   "2013": {
+    "n": 3,
+    "med_export_eur": 9499,
+    "p25_export_eur": 8000,
+    "found": 3
+   },
+   "2014": null,
+   "2015": {
+    "n": 3,
+    "med_export_eur": 8000,
+    "p25_export_eur": 8000,
+    "found": 3
+   },
+   "2016": null,
+   "2017": {
+    "n": 5,
+    "med_export_eur": 15490,
+    "p25_export_eur": 13900,
+    "found": 5
+   },
+   "2018": {
+    "n": 6,
+    "med_export_eur": 15490,
+    "p25_export_eur": 14300,
+    "found": 6
+   },
+   "2019": null,
+   "2020": {
+    "n": 8,
+    "med_export_eur": 15645,
+    "p25_export_eur": 12900,
+    "found": 8
+   },
+   "2021": null,
+   "2022": null,
+   "2023": null,
+   "2024": null,
+   "2025": null
+  },
+  "Yamaha YZF-R3": {
+   "2012": null,
+   "2013": null,
+   "2014": null,
+   "2015": {
+    "n": 3,
+    "med_export_eur": 3950,
+    "p25_export_eur": 3700,
+    "found": 3
+   },
+   "2016": {
+    "n": 5,
+    "med_export_eur": 4200,
+    "p25_export_eur": 3900,
+    "found": 5
+   },
+   "2017": null,
+   "2018": {
+    "n": 4,
+    "med_export_eur": 4500,
+    "p25_export_eur": 4300,
+    "found": 4
+   },
+   "2019": {
+    "n": 6,
+    "med_export_eur": 4500,
+    "p25_export_eur": 4499,
+    "found": 6
+   },
+   "2020": {
+    "n": 4,
+    "med_export_eur": 5145,
+    "p25_export_eur": 4690,
+    "found": 4
+   },
+   "2021": null,
+   "2022": null,
+   "2023": {
+    "n": 4,
+    "med_export_eur": 4950,
+    "p25_export_eur": 4400,
+    "found": 4
+   },
+   "2024": {
+    "n": 3,
+    "med_export_eur": 6000,
+    "p25_export_eur": 5500,
+    "found": 3
+   },
+   "2025": {
+    "n": 9,
+    "med_export_eur": 6200,
+    "p25_export_eur": 5990,
+    "found": 9
+   }
+  },
+  "Yamaha MT-09": {
+   "2012": null,
+   "2013": {
+    "n": 9,
+    "med_export_eur": 5600,
+    "p25_export_eur": 4700,
+    "found": 9
+   },
+   "2014": {
+    "n": 20,
+    "med_export_eur": 4600,
+    "p25_export_eur": 4450,
+    "found": 29
+   },
+   "2015": {
+    "n": 20,
+    "med_export_eur": 5325,
+    "p25_export_eur": 4500,
+    "found": 33
+   },
+   "2016": {
+    "n": 20,
+    "med_export_eur": 5500,
+    "p25_export_eur": 4990,
+    "found": 38
+   },
+   "2017": {
+    "n": 20,
+    "med_export_eur": 6000,
+    "p25_export_eur": 5700,
+    "found": 54
+   },
+   "2018": {
+    "n": 20,
+    "med_export_eur": 6825,
+    "p25_export_eur": 6500,
+    "found": 70
+   },
+   "2019": {
+    "n": 20,
+    "med_export_eur": 6950,
+    "p25_export_eur": 6499,
+    "found": 52
+   },
+   "2020": {
+    "n": 20,
+    "med_export_eur": 6900,
+    "p25_export_eur": 6500,
+    "found": 57
+   },
+   "2021": {
+    "n": 20,
+    "med_export_eur": 7294,
+    "p25_export_eur": 6999,
+    "found": 83
+   },
+   "2022": {
+    "n": 20,
+    "med_export_eur": 7275,
+    "p25_export_eur": 6990,
+    "found": 78
+   },
+   "2023": {
+    "n": 20,
+    "med_export_eur": 7500,
+    "p25_export_eur": 7200,
+    "found": 112
+   },
+   "2024": {
+    "n": 20,
+    "med_export_eur": 7999,
+    "p25_export_eur": 7990,
+    "found": 141
+   },
+   "2025": {
+    "n": 20,
+    "med_export_eur": 8925,
+    "p25_export_eur": 8499,
+    "found": 99
+   }
+  },
+  "Yamaha MT-07": {
+   "2012": null,
+   "2013": null,
+   "2014": {
+    "n": 20,
+    "med_export_eur": 3970,
+    "p25_export_eur": 3690,
+    "found": 48
+   },
+   "2015": {
+    "n": 20,
+    "med_export_eur": 4300,
+    "p25_export_eur": 4000,
+    "found": 43
+   },
+   "2016": {
+    "n": 20,
+    "med_export_eur": 4445,
+    "p25_export_eur": 4000,
+    "found": 51
+   },
+   "2017": {
+    "n": 20,
+    "med_export_eur": 4500,
+    "p25_export_eur": 4200,
+    "found": 50
+   },
+   "2018": {
+    "n": 20,
+    "med_export_eur": 4725,
+    "p25_export_eur": 4500,
+    "found": 64
+   },
+   "2019": {
+    "n": 20,
+    "med_export_eur": 4800,
+    "p25_export_eur": 4500,
+    "found": 82
+   },
+   "2020": {
+    "n": 20,
+    "med_export_eur": 4845,
+    "p25_export_eur": 4590,
+    "found": 89
+   },
+   "2021": {
+    "n": 20,
+    "med_export_eur": 5290,
+    "p25_export_eur": 5000,
+    "found": 104
+   },
+   "2022": {
+    "n": 20,
+    "med_export_eur": 5494,
+    "p25_export_eur": 5100,
+    "found": 84
+   },
+   "2023": {
+    "n": 20,
+    "med_export_eur": 5990,
+    "p25_export_eur": 5800,
+    "found": 86
+   },
+   "2024": {
+    "n": 20,
+    "med_export_eur": 5994,
+    "p25_export_eur": 5900,
+    "found": 101
+   },
+   "2025": {
+    "n": 20,
+    "med_export_eur": 6400,
+    "p25_export_eur": 6000,
+    "found": 148
+   }
+  },
+  "Honda CBR 600RR": {
+   "2012": {
+    "n": 3,
+    "med_export_eur": 5300,
+    "p25_export_eur": 4800,
+    "found": 3
+   },
+   "2013": {
+    "n": 5,
+    "med_export_eur": 5500,
+    "p25_export_eur": 4900,
+    "found": 5
+   },
+   "2014": {
+    "n": 7,
+    "med_export_eur": 8499,
+    "p25_export_eur": 5750,
+    "found": 7
+   },
+   "2015": null,
+   "2016": null,
+   "2017": null,
+   "2018": null,
+   "2019": null,
+   "2020": null,
+   "2021": null,
+   "2022": null,
+   "2023": null,
+   "2024": {
+    "n": 15,
+    "med_export_eur": 10500,
+    "p25_export_eur": 10399,
+    "found": 15
+   },
+   "2025": {
+    "n": 15,
+    "med_export_eur": 10590,
+    "p25_export_eur": 10250,
+    "found": 15
+   }
+  },
+  "Honda CBR 1000RR": {
+   "2012": {
+    "n": 4,
+    "med_export_eur": 7950,
+    "p25_export_eur": 7950,
+    "found": 4
+   },
+   "2013": {
+    "n": 8,
+    "med_export_eur": 10650,
+    "p25_export_eur": 10500,
+    "found": 8
+   },
+   "2014": {
+    "n": 8,
+    "med_export_eur": 11949,
+    "p25_export_eur": 11949,
+    "found": 8
+   },
+   "2015": {
+    "n": 3,
+    "med_export_eur": 9000,
+    "p25_export_eur": 7900,
+    "found": 3
+   },
+   "2016": {
+    "n": 3,
+    "med_export_eur": 13000,
+    "p25_export_eur": 13000,
+    "found": 3
+   },
+   "2017": {
+    "n": 4,
+    "med_export_eur": 13144,
+    "p25_export_eur": 11490,
+    "found": 4
+   },
+   "2018": {
+    "n": 10,
+    "med_export_eur": 14094,
+    "p25_export_eur": 12990,
+    "found": 10
+   },
+   "2019": {
+    "n": 7,
+    "med_export_eur": 12000,
+    "p25_export_eur": 7990,
+    "found": 7
+   },
+   "2020": {
+    "n": 6,
+    "med_export_eur": 16250,
+    "p25_export_eur": 15990,
+    "found": 6
+   },
+   "2021": {
+    "n": 8,
+    "med_export_eur": 17600,
+    "p25_export_eur": 16900,
+    "found": 8
+   },
+   "2022": {
+    "n": 7,
+    "med_export_eur": 19950,
+    "p25_export_eur": 16950,
+    "found": 7
+   },
+   "2023": {
+    "n": 6,
+    "med_export_eur": 17745,
+    "p25_export_eur": 15000,
+    "found": 6
+   },
+   "2024": {
+    "n": 4,
+    "med_export_eur": 21995,
+    "p25_export_eur": 19990,
+    "found": 4
+   },
+   "2025": {
+    "n": 4,
+    "med_export_eur": 20650,
+    "p25_export_eur": 18900,
+    "found": 4
+   }
+  },
+  "Honda Africa Twin": {
+   "2012": null,
+   "2013": null,
+   "2014": null,
+   "2015": null,
+   "2016": null,
+   "2017": null,
+   "2018": null,
+   "2019": {
+    "n": 6,
+    "med_export_eur": 11875,
+    "p25_export_eur": 10000,
+    "found": 6
+   },
+   "2020": {
+    "n": 20,
+    "med_export_eur": 10850,
+    "p25_export_eur": 10000,
+    "found": 53
+   },
+   "2021": {
+    "n": 20,
+    "med_export_eur": 11000,
+    "p25_export_eur": 10800,
+    "found": 54
+   },
+   "2022": {
+    "n": 20,
+    "med_export_eur": 12500,
+    "p25_export_eur": 11500,
+    "found": 42
+   },
+   "2023": {
+    "n": 20,
+    "med_export_eur": 12100,
+    "p25_export_eur": 11950,
+    "found": 65
+   },
+   "2024": {
+    "n": 20,
+    "med_export_eur": 13495,
+    "p25_export_eur": 12900,
+    "found": 61
+   },
+   "2025": {
+    "n": 20,
+    "med_export_eur": 14000,
+    "p25_export_eur": 13500,
+    "found": 46
+   }
+  },
+  "Honda Gold Wing": {
+   "2012": {
+    "n": 4,
+    "med_export_eur": 11768,
+    "p25_export_eur": 11535,
+    "found": 4
+   },
+   "2013": null,
+   "2014": null,
+   "2015": {
+    "n": 3,
+    "med_export_eur": 16500,
+    "p25_export_eur": 12949,
+    "found": 3
+   },
+   "2016": null,
+   "2017": null,
+   "2018": {
+    "n": 7,
+    "med_export_eur": 21999,
+    "p25_export_eur": 15000,
+    "found": 7
+   },
+   "2019": {
+    "n": 5,
+    "med_export_eur": 20490,
+    "p25_export_eur": 20000,
+    "found": 5
+   },
+   "2020": {
+    "n": 5,
+    "med_export_eur": 25000,
+    "p25_export_eur": 22850,
+    "found": 5
+   },
+   "2021": null,
+   "2022": null,
+   "2023": {
+    "n": 8,
+    "med_export_eur": 30745,
+    "p25_export_eur": 29989,
+    "found": 8
+   },
+   "2024": {
+    "n": 4,
+    "med_export_eur": 33820,
+    "p25_export_eur": 33650,
+    "found": 4
+   },
+   "2025": null
+  },
+  "Kawasaki Ninja 650": {
+   "2012": null,
+   "2013": null,
+   "2014": null,
+   "2015": null,
+   "2016": null,
+   "2017": {
+    "n": 9,
+    "med_export_eur": 5749,
+    "p25_export_eur": 5200,
+    "found": 9
+   },
+   "2018": {
+    "n": 13,
+    "med_export_eur": 6000,
+    "p25_export_eur": 5599,
+    "found": 13
+   },
+   "2019": {
+    "n": 6,
+    "med_export_eur": 5600,
+    "p25_export_eur": 5500,
+    "found": 6
+   },
+   "2020": {
+    "n": 15,
+    "med_export_eur": 6500,
+    "p25_export_eur": 6300,
+    "found": 15
+   },
+   "2021": {
+    "n": 14,
+    "med_export_eur": 6500,
+    "p25_export_eur": 6000,
+    "found": 14
+   },
+   "2022": {
+    "n": 10,
+    "med_export_eur": 6345,
+    "p25_export_eur": 5700,
+    "found": 10
+   },
+   "2023": {
+    "n": 18,
+    "med_export_eur": 6395,
+    "p25_export_eur": 5999,
+    "found": 18
+   },
+   "2024": {
+    "n": 12,
+    "med_export_eur": 6995,
+    "p25_export_eur": 6699,
+    "found": 12
+   },
+   "2025": {
+    "n": 20,
+    "med_export_eur": 7050,
+    "p25_export_eur": 6690,
+    "found": 25
+   }
+  },
+  "Kawasaki ZX-6R": {
+   "2012": null,
+   "2013": null,
+   "2014": null,
+   "2015": null,
+   "2016": null,
+   "2017": null,
+   "2018": null,
+   "2019": {
+    "n": 11,
+    "med_export_eur": 9500,
+    "p25_export_eur": 8000,
+    "found": 11
+   },
+   "2020": {
+    "n": 6,
+    "med_export_eur": 9750,
+    "p25_export_eur": 8700,
+    "found": 6
+   },
+   "2021": null,
+   "2022": null,
+   "2023": null,
+   "2024": {
+    "n": 19,
+    "med_export_eur": 11500,
+    "p25_export_eur": 10790,
+    "found": 19
+   },
+   "2025": {
+    "n": 20,
+    "med_export_eur": 10750,
+    "p25_export_eur": 10300,
+    "found": 20
+   }
+  },
+  "Kawasaki Ninja 400": {
+   "2012": null,
+   "2013": null,
+   "2014": null,
+   "2015": null,
+   "2016": null,
+   "2017": null,
+   "2018": {
+    "n": 9,
+    "med_export_eur": 5000,
+    "p25_export_eur": 4800,
+    "found": 9
+   },
+   "2019": {
+    "n": 7,
+    "med_export_eur": 5000,
+    "p25_export_eur": 4700,
+    "found": 7
+   },
+   "2020": {
+    "n": 6,
+    "med_export_eur": 5000,
+    "p25_export_eur": 5000,
+    "found": 6
+   },
+   "2021": {
+    "n": 4,
+    "med_export_eur": 5600,
+    "p25_export_eur": 5500,
+    "found": 4
+   },
+   "2022": null,
+   "2023": {
+    "n": 14,
+    "med_export_eur": 5650,
+    "p25_export_eur": 4999,
+    "found": 14
+   },
+   "2024": null,
+   "2025": null
+  },
+  "Kawasaki ZX-10R": {
+   "2012": {
+    "n": 7,
+    "med_export_eur": 8500,
+    "p25_export_eur": 7500,
+    "found": 7
+   },
+   "2013": {
+    "n": 3,
+    "med_export_eur": 9400,
+    "p25_export_eur": 6000,
+    "found": 3
+   },
+   "2014": {
+    "n": 3,
+    "med_export_eur": 11500,
+    "p25_export_eur": 9900,
+    "found": 3
+   },
+   "2015": {
+    "n": 4,
+    "med_export_eur": 11745,
+    "p25_export_eur": 10500,
+    "found": 4
+   },
+   "2016": {
+    "n": 3,
+    "med_export_eur": 11900,
+    "p25_export_eur": 8300,
+    "found": 3
+   },
+   "2017": {
+    "n": 5,
+    "med_export_eur": 12000,
+    "p25_export_eur": 9990,
+    "found": 5
+   },
+   "2018": {
+    "n": 5,
+    "med_export_eur": 13990,
+    "p25_export_eur": 13750,
+    "found": 5
+   },
+   "2019": {
+    "n": 5,
+    "med_export_eur": 14000,
+    "p25_export_eur": 11500,
+    "found": 5
+   },
+   "2020": null,
+   "2021": null,
+   "2022": {
+    "n": 5,
+    "med_export_eur": 15900,
+    "p25_export_eur": 14900,
+    "found": 5
+   },
+   "2023": null,
+   "2024": {
+    "n": 4,
+    "med_export_eur": 19350,
+    "p25_export_eur": 17200,
+    "found": 4
+   },
+   "2025": null
+  },
+  "Suzuki GSX-R1000": {
+   "2012": {
+    "n": 5,
+    "med_export_eur": 9800,
+    "p25_export_eur": 8100,
+    "found": 5
+   },
+   "2013": null,
+   "2014": {
+    "n": 5,
+    "med_export_eur": 9200,
+    "p25_export_eur": 9000,
+    "found": 5
+   },
+   "2015": null,
+   "2016": null,
+   "2017": {
+    "n": 12,
+    "med_export_eur": 12700,
+    "p25_export_eur": 12000,
+    "found": 12
+   },
+   "2018": {
+    "n": 10,
+    "med_export_eur": 14845,
+    "p25_export_eur": 12400,
+    "found": 10
+   },
+   "2019": {
+    "n": 4,
+    "med_export_eur": 12600,
+    "p25_export_eur": 11700,
+    "found": 4
+   },
+   "2020": {
+    "n": 5,
+    "med_export_eur": 14500,
+    "p25_export_eur": 13000,
+    "found": 5
+   },
+   "2021": {
+    "n": 5,
+    "med_export_eur": 17999,
+    "p25_export_eur": 17800,
+    "found": 5
+   },
+   "2022": null,
+   "2023": null,
+   "2024": null,
+   "2025": null
+  },
+  "Suzuki GSX-R750": {
+   "2012": {
+    "n": 3,
+    "med_export_eur": 8800,
+    "p25_export_eur": 7600,
+    "found": 3
+   },
+   "2013": null,
+   "2014": {
+    "n": 4,
+    "med_export_eur": 8500,
+    "p25_export_eur": 8500,
+    "found": 4
+   },
+   "2015": null,
+   "2016": null,
+   "2017": null,
+   "2018": null,
+   "2019": null,
+   "2020": null,
+   "2021": null,
+   "2022": null,
+   "2023": null,
+   "2024": null,
+   "2025": null
+  },
+  "Suzuki Boulevard M109R": {
+   "2012": null,
+   "2013": null,
+   "2014": null,
+   "2015": null,
+   "2016": null,
+   "2017": null,
+   "2018": null,
+   "2019": null,
+   "2020": null,
+   "2021": null,
+   "2022": null,
+   "2023": null,
+   "2024": null,
+   "2025": null
+  },
+  "BMW S 1000 RR": {
+   "2012": {
+    "n": 16,
+    "med_export_eur": 10875,
+    "p25_export_eur": 9600,
+    "found": 16
+   },
+   "2013": {
+    "n": 9,
+    "med_export_eur": 10000,
+    "p25_export_eur": 9490,
+    "found": 9
+   },
+   "2014": {
+    "n": 6,
+    "med_export_eur": 12195,
+    "p25_export_eur": 7300,
+    "found": 6
+   },
+   "2015": {
+    "n": 20,
+    "med_export_eur": 15230,
+    "p25_export_eur": 13500,
+    "found": 25
+   },
+   "2016": {
+    "n": 19,
+    "med_export_eur": 18690,
+    "p25_export_eur": 15000,
+    "found": 19
+   },
+   "2017": {
+    "n": 20,
+    "med_export_eur": 15595,
+    "p25_export_eur": 13999,
+    "found": 20
+   },
+   "2018": {
+    "n": 20,
+    "med_export_eur": 18140,
+    "p25_export_eur": 16900,
+    "found": 20
+   },
+   "2019": {
+    "n": 7,
+    "med_export_eur": 16900,
+    "p25_export_eur": 16495,
+    "found": 7
+   },
+   "2020": {
+    "n": 20,
+    "med_export_eur": 16500,
+    "p25_export_eur": 15800,
+    "found": 27
+   },
+   "2021": {
+    "n": 20,
+    "med_export_eur": 20000,
+    "p25_export_eur": 18390,
+    "found": 20
+   },
+   "2022": {
+    "n": 20,
+    "med_export_eur": 18690,
+    "p25_export_eur": 18000,
+    "found": 21
+   },
+   "2023": {
+    "n": 20,
+    "med_export_eur": 19500,
+    "p25_export_eur": 18990,
+    "found": 32
+   },
+   "2024": {
+    "n": 18,
+    "med_export_eur": 20945,
+    "p25_export_eur": 20000,
+    "found": 18
+   },
+   "2025": {
+    "n": 20,
+    "med_export_eur": 20999,
+    "p25_export_eur": 20790,
+    "found": 37
+   }
+  },
+  "BMW R 1200/1250 GS": {
+   "2012": null,
+   "2013": null,
+   "2014": null,
+   "2015": null,
+   "2016": null,
+   "2017": null,
+   "2018": {
+    "n": 9,
+    "med_export_eur": 14490,
+    "p25_export_eur": 14450,
+    "found": 9
+   },
+   "2019": {
+    "n": 20,
+    "med_export_eur": 12500,
+    "p25_export_eur": 11500,
+    "found": 108
+   },
+   "2020": {
+    "n": 20,
+    "med_export_eur": 14500,
+    "p25_export_eur": 13970,
+    "found": 102
+   },
+   "2021": {
+    "n": 20,
+    "med_export_eur": 15150,
+    "p25_export_eur": 14500,
+    "found": 114
+   },
+   "2022": {
+    "n": 20,
+    "med_export_eur": 15900,
+    "p25_export_eur": 14499,
+    "found": 102
+   },
+   "2023": {
+    "n": 20,
+    "med_export_eur": 17500,
+    "p25_export_eur": 17000,
+    "found": 103
+   },
+   "2024": {
+    "n": 7,
+    "med_export_eur": 21500,
+    "p25_export_eur": 18500,
+    "found": 7
+   },
+   "2025": null
+  },
+  "Harley-Davidson Sportster": {
+   "2012": {
+    "n": 11,
+    "med_export_eur": 9989,
+    "p25_export_eur": 7999,
+    "found": 11
+   },
+   "2013": {
+    "n": 15,
+    "med_export_eur": 9950,
+    "p25_export_eur": 8250,
+    "found": 15
+   },
+   "2014": {
+    "n": 6,
+    "med_export_eur": 11494,
+    "p25_export_eur": 9500,
+    "found": 6
+   },
+   "2015": {
+    "n": 11,
+    "med_export_eur": 10989,
+    "p25_export_eur": 8990,
+    "found": 11
+   },
+   "2016": {
+    "n": 3,
+    "med_export_eur": 13489,
+    "p25_export_eur": 10900,
+    "found": 3
+   },
+   "2017": {
+    "n": 15,
+    "med_export_eur": 10900,
+    "p25_export_eur": 8990,
+    "found": 15
+   },
+   "2018": {
+    "n": 14,
+    "med_export_eur": 11944,
+    "p25_export_eur": 10900,
+    "found": 14
+   },
+   "2019": {
+    "n": 11,
+    "med_export_eur": 12795,
+    "p25_export_eur": 11990,
+    "found": 11
+   },
+   "2020": {
+    "n": 9,
+    "med_export_eur": 13495,
+    "p25_export_eur": 12950,
+    "found": 9
+   },
+   "2021": null,
+   "2022": {
+    "n": 13,
+    "med_export_eur": 12200,
+    "p25_export_eur": 11500,
+    "found": 13
+   },
+   "2023": {
+    "n": 6,
+    "med_export_eur": 13225,
+    "p25_export_eur": 12499,
+    "found": 6
+   },
+   "2024": {
+    "n": 11,
+    "med_export_eur": 13500,
+    "p25_export_eur": 11000,
+    "found": 11
+   },
+   "2025": {
+    "n": 6,
+    "med_export_eur": 16898,
+    "p25_export_eur": 15000,
+    "found": 6
+   }
+  },
+  "Harley-Davidson Fat Boy": {
+   "2012": {
+    "n": 20,
+    "med_export_eur": 16000,
+    "p25_export_eur": 14800,
+    "found": 20
+   },
+   "2013": {
+    "n": 14,
+    "med_export_eur": 15500,
+    "p25_export_eur": 14300,
+    "found": 14
+   },
+   "2014": {
+    "n": 14,
+    "med_export_eur": 16500,
+    "p25_export_eur": 14500,
+    "found": 14
+   },
+   "2015": {
+    "n": 14,
+    "med_export_eur": 17000,
+    "p25_export_eur": 15490,
+    "found": 14
+   },
+   "2016": {
+    "n": 17,
+    "med_export_eur": 19300,
+    "p25_export_eur": 17489,
+    "found": 17
+   },
+   "2017": {
+    "n": 6,
+    "med_export_eur": 20415,
+    "p25_export_eur": 19000,
+    "found": 6
+   },
+   "2018": {
+    "n": 20,
+    "med_export_eur": 19950,
+    "p25_export_eur": 18500,
+    "found": 23
+   },
+   "2019": {
+    "n": 12,
+    "med_export_eur": 21950,
+    "p25_export_eur": 19900,
+    "found": 12
+   },
+   "2020": {
+    "n": 19,
+    "med_export_eur": 30469,
+    "p25_export_eur": 26000,
+    "found": 19
+   },
+   "2021": {
+    "n": 17,
+    "med_export_eur": 23750,
+    "p25_export_eur": 22490,
+    "found": 17
+   },
+   "2022": {
+    "n": 13,
+    "med_export_eur": 22900,
+    "p25_export_eur": 21500,
+    "found": 13
+   },
+   "2023": {
+    "n": 14,
+    "med_export_eur": 28825,
+    "p25_export_eur": 24000,
+    "found": 14
+   },
+   "2024": {
+    "n": 7,
+    "med_export_eur": 24750,
+    "p25_export_eur": 23490,
+    "found": 7
+   },
+   "2025": {
+    "n": 7,
+    "med_export_eur": 31695,
+    "p25_export_eur": 26000,
+    "found": 7
+   }
+  },
+  "Harley-Davidson Road Glide": {
+   "2012": {
+    "n": 6,
+    "med_export_eur": 19225,
+    "p25_export_eur": 16990,
+    "found": 6
+   },
+   "2013": {
+    "n": 4,
+    "med_export_eur": 17720,
+    "p25_export_eur": 16950,
+    "found": 4
+   },
+   "2014": null,
+   "2015": {
+    "n": 12,
+    "med_export_eur": 18474,
+    "p25_export_eur": 17499,
+    "found": 12
+   },
+   "2016": {
+    "n": 12,
+    "med_export_eur": 18000,
+    "p25_export_eur": 17000,
+    "found": 12
+   },
+   "2017": {
+    "n": 11,
+    "med_export_eur": 20950,
+    "p25_export_eur": 19700,
+    "found": 11
+   },
+   "2018": {
+    "n": 13,
+    "med_export_eur": 20999,
+    "p25_export_eur": 19950,
+    "found": 13
+   },
+   "2019": {
+    "n": 10,
+    "med_export_eur": 23240,
+    "p25_export_eur": 22000,
+    "found": 10
+   },
+   "2020": {
+    "n": 9,
+    "med_export_eur": 24950,
+    "p25_export_eur": 22500,
+    "found": 9
+   },
+   "2021": {
+    "n": 10,
+    "med_export_eur": 23475,
+    "p25_export_eur": 20300,
+    "found": 10
+   },
+   "2022": {
+    "n": 12,
+    "med_export_eur": 29942,
+    "p25_export_eur": 28950,
+    "found": 12
+   },
+   "2023": {
+    "n": 19,
+    "med_export_eur": 28500,
+    "p25_export_eur": 26950,
+    "found": 22
+   },
+   "2024": {
+    "n": 20,
+    "med_export_eur": 30250,
+    "p25_export_eur": 28500,
+    "found": 24
+   },
+   "2025": {
+    "n": 14,
+    "med_export_eur": 37792,
+    "p25_export_eur": 34795,
+    "found": 14
+   }
+  }
+ }
+}

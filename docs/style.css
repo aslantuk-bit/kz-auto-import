@@ -213,3 +213,6 @@ footer .wrap { padding-block: 18px 28px; display: flex; flex-wrap: wrap; gap: 6p
 }
 
 #veh [hidden] { display: none !important; }
+
+.gain { color: var(--s3); font-weight: 600; }
+.loss { color: var(--bad); }

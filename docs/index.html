@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Unbounded:wght@500;600&display=swap">
-<link rel="stylesheet" href="style.css?v=1.6.1">
+<link rel="stylesheet" href="style.css?v=1.7.0">
 </head>
 <body>
 <header class="top">
@@ -30,6 +30,7 @@
   <div class="wrap" role="tablist">
     <button role="tab" data-tab="calc" aria-selected="true">Калькулятор</button>
     <button role="tab" data-tab="vehicles" aria-selected="false">Грузовики и спецтехника</button>
+    <button role="tab" data-tab="deals" aria-selected="false">Что выгодно ввезти</button>
     <button role="tab" data-tab="savings" aria-selected="false">Как сэкономить</button>
     <button role="tab" data-tab="analytics" aria-selected="false">Аналитика</button>
     <button role="tab" data-tab="rates" aria-selected="false">База ставок</button>
@@ -185,6 +186,28 @@
       </div>
     </section>
 
+    <section id="deals" role="tabpanel" hidden>
+      <div class="stack">
+        <div class="card">
+          <h2 class="section-title">Что выгодно ввезти, а что дешевле купить в Казахстане</h2>
+          <p class="lede">Для каждой модели и года: медиана объявлений за рубежом + вывоз и доставка + все платежи по самому дешёвому маршруту + брокер, СВХ, СБКТС — против медианы тех же модели и года на Kolesa.kz.</p>
+          <p class="note" id="dl-meta"></p>
+          <div class="seg" id="dl-cat" style="margin-top:10px"></div>
+        </div>
+        <div class="card">
+          <h2 class="section-title">По моделям</h2>
+          <p class="note">Медиана выгоды по всем годам, где объявлений хватило; «в плюсе» — сколько лет ввоз дешевле Kolesa.</p>
+          <div class="table-wrap" style="margin-top:10px"><table id="dl-sum"></table></div>
+        </div>
+        <div class="card">
+          <h2 class="section-title">По годам</h2>
+          <label class="check" style="margin:6px 0"><input type="checkbox" id="dl-pos" checked> Только где ввоз дешевле</label>
+          <div class="table-wrap" style="margin-top:6px"><table id="dl-rows"></table></div>
+          <p class="note" style="margin-top:10px">Цены объявлений — цены продавцов, а не сделок; пробег на Kolesa не учтён, комплектации могут не совпадать. Для 2021–2023 годов часто дешевле ПТД — он для себя, не для перепродажи партиями. Из ЕС продавцы проверяют конечного покупателя из-за санкций. Доставка и вывоз — ориентиры, ставку уточнять у перевозчика. Спецтехника: экскаваторы сравниваются классом (20–25 т гусеничные, 14–16 т колёсные), а не моделью; доставка экскаватора на трале заложена около 6 тыс. €, тягача своим ходом — 1,8 тыс. €. Тракторов, комбайнов и погрузчиков на Kolesa слишком мало для сравнения.</p>
+        </div>
+      </div>
+    </section>
+
     <section id="savings" role="tabpanel" hidden>
       <div class="stack" id="sv"></div>
     </section>
@@ -293,9 +316,9 @@
 </main>
 <footer><div class="wrap"><span>Автор — TAS · Aseke</span><span>Бесплатно, в помощь всем</span><span id="asof-foot">Ставки сверены 15.10.2026</span><span>Справочный расчёт, не официальная позиция госорганов</span><a href="https://github.com/aslantuk-bit/kz-auto-import">Исходники на GitHub</a></div></footer>
 <div class="tip" id="tip" hidden></div>
-<script src="calc.js?v=1.6.1"></script>
-<script src="tips.js?v=1.6.1"></script>
-<script src="vehicles.js?v=1.6.1"></script>
-<script src="app.js?v=1.6.1"></script>
+<script src="calc.js?v=1.7.0"></script>
+<script src="tips.js?v=1.7.0"></script>
+<script src="vehicles.js?v=1.7.0"></script>
+<script src="app.js?v=1.7.0"></script>
 </body>
 </html>

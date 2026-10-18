@@ -17,6 +17,7 @@ import pandas as pd  # noqa: E402
 import calc  # noqa: E402
 import glossary  # noqa: E402
 import kolesa  # noqa: E402
+from abroad import deals  # noqa: E402
 import savings  # noqa: E402
 from paths import OUT  # noqa: E402
 
@@ -81,6 +82,7 @@ def main():
         "glossary": {"dt_vs_ptd": glossary.DT_VS_PTD, "terms": glossary.TERMS},
         "kolesa": {"date": kolesa.load().get("date"), "min": kolesa.MIN_ADS,
                    "models": {k: {"name": n, "years": kolesa.load()["models"][k]["years"]} for k, n in kolesa.models()}},
+        "deals": deals.compute(),
         "sources": records(sources.rename(columns={"правовой_акт": "act", "записей": "n", "блоки": "blocks"})),
     }
     text = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
