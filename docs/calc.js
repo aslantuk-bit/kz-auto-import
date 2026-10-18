@@ -7,9 +7,12 @@
   function make(K) {
     const band = (v, edges) => { for (let i = 0; i < edges.length; i++) if (v <= edges[i]) return i; return edges.length; };
     const isEl = (t) => t === "гибрид_эл" || t === "электро";
+    // доставка из третьих стран есть только у ДТ и ПТД; в таможенную стоимость входит только по ДТ
+    const delivery = (c) => (c.mode === "ДТ" || c.mode === "ПТД" ? c.delivery_eur || 0 : 0);
+    const baseEur = (c) => c.price_eur + (c.mode === "ДТ" ? delivery(c) : 0);
 
     function dutyEtt(c) {
-      const v = c.price_eur * K.EUR;
+      const v = baseEur(c) * K.EUR;
       if (isEl(c.fuel)) return 0.15 * v;
       const ice = c.fuel === "дизель" ? "дизель" : "бензин";
       if (c.age < 3) return ice === "бензин" && c.cc > 2800 ? 0.125 * v : 0.15 * v;
@@ -21,7 +24,7 @@
     }
 
     function dutyWto(c) {   // null — позиции нет в перечне ВТО, применяется ЕТТ
-      const v = c.price_eur * K.EUR;
+      const v = baseEur(c) * K.EUR;
       if (isEl(c.fuel)) return 0;
       if (c.age < 3) return null;
       if (c.age <= 7) return 0.15 * v;
@@ -67,17 +70,17 @@
     }
 
     function calc(c) {
-      const v = c.price_eur * K.EUR;
+      const v = c.price_eur * K.EUR, base = baseEur(c) * K.EUR;
       const r = { duty: 0, duty_basis: "—", etp: 0, customs_fee: 0, excise_cc: 0, excise_lux: 0, vat: 0 };
       const exciseCc = c.fuel !== "электро" && c.cc > 3000 ? 100 * c.cc : 0;
-      const lux = v >= K.LUX_THRESHOLD ? Math.max(0.10 * v - exciseCc, 0) : 0;
+      const lux = base >= K.LUX_THRESHOLD ? Math.max(0.10 * base - exciseCc, 0) : 0;
       if (c.mode === "ДТ") {
         const ett = dutyEtt(c), wto = dutyWto(c);
         if (wto !== null && wto <= ett) { r.duty = wto; r.duty_basis = "ВТО (Решение № 59)"; }
         else { r.duty = ett; r.duty_basis = "ЕТТ (Решение № 80)"; }
         r.customs_fee = K.CUSTOMS_FEE_MRP * K.MRP;
         r.excise_cc = exciseCc; r.excise_lux = lux;
-        r.vat = K.VAT * (v + r.duty + exciseCc + lux);
+        r.vat = K.VAT * (base + r.duty + exciseCc + lux);
       } else if (c.mode === "ПТД") {
         r.etp = etp(c);
         r.duty_basis = c.fuel === "электро" ? "СТП (ЕТТ + НДС)" : "ЕТП (Решение № 107)";
@@ -95,8 +98,10 @@
       let market = K.MARKET["ОГПО_год"] + (c.mode === "ДТ" || c.mode === "ПТД" ? K.MARKET["брокер"] + K.MARKET["СВХ"] : 0);
       if (c.mode === "ДТ" || c.mode === "ПТД") market += K.MARKET["СБКТС"] + (c.mode === "ПТД" ? K.MARKET["ЭПТС"] : 0);
       r.market = market;
-      r.total_market = r.total + market;
+      r.delivery = delivery(c) * K.EUR;
+      r.total_market = r.total + market + r.delivery;
       r.value_kzt = v;
+      r.customs_value = c.mode === "ДТ" ? base : c.mode === "ПТД" ? v : 0;
       r.share_pct = 100 * r.total / v;
       r.tax_year = transportTax(c);
       const flags = [];

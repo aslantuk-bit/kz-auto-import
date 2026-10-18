@@ -1,6 +1,7 @@
 """«Как сэкономить»: выводы по полной сетке вариантов, посчитанные калькулятором calc.py.
 
 Один источник для приложения (ui/page_savings.py) и сайта (web/export_data.py → data.json).
+Машины из третьих стран (ДТ, ПТД) — с типовой доставкой calc.DELIVERY_EUR до границы ЕАЭС.
 """
 from itertools import product
 
@@ -14,22 +15,27 @@ ROUTES = (("ДТ", "третьи", "dt"), ("ПТД", "третьи", "ptd"), ("�
 BLOCKS = ("регистрация невозможна", "нельзя передавать")
 
 
+D = calc.DELIVERY_EUR
+
+
 def total(price, fuel, cc, age, mode="ДТ", origin="третьи"):
-    return calc.calc(calc.Car(price, fuel, cc, age, mode, origin))["итого_обязательные"]
+    return calc.calc(calc.Car(price, fuel, cc, age, mode, origin, доставка_eur=D))["итого_обязательные"]
 
 
 def _grid():
     rows = []
     for (fuel, cc), age, price in product(ENGINES, AGES, PRICES):
         for mode, origin, rid in ROUTES:
-            car = calc.Car(price, fuel, cc, age, mode, origin)
+            car = calc.Car(price, fuel, cc, age, mode, origin, доставка_eur=D)
             r = calc.calc(car)
             rows.append({
                 "key": (fuel, cc, age, price), "fuel": fuel, "route": rid,
                 "blocked": any(b in r["примечания"] for b in BLOCKS),
                 "kz": r["итого_обязательные"],
-                # пошлина ЕТТ, уплаченная в стране ЕАЭС и заложенная в цену; без их НДС и сборов — оценка снизу
-                "landed": price * calc.EUR + r["итого_обязательные"] + (calc.duty_ett(car) if mode.startswith("ЕАЭС") else 0),
+                # пошлина ЕТТ, уплаченная в стране ЕАЭС и заложенная в цену; без их НДС и сборов — оценка снизу;
+                # для третьих стран — плюс сама доставка до границы ЕАЭС
+                "landed": price * calc.EUR + r["итого_обязательные"] + r["доставка_кзт"]
+                          + (calc.duty_ett(car) if mode.startswith("ЕАЭС") else 0),
             })
     return rows
 
@@ -63,6 +69,7 @@ def compute():
     ptd_dt = {age: {pr: total(pr, "бензин", 2000, age, "ПТД") - total(pr, "бензин", 2000, age, "ДТ") for pr in PRICES}
               for age in range(0, 6)}
     return {
+        "delivery_eur": D,
         "configs": len(by_kz),
         "routes_total": len(rows),
         "ru": {"min": ru[0], "median": ru[len(ru) // 2]},
@@ -78,7 +85,9 @@ def compute():
                    "v2000_2100": total(25000, "бензин", 2100, 4) - total(25000, "бензин", 2000, 4),
                    "v3000_3100": total(25000, "бензин", 3100, 4) - total(25000, "бензин", 3000, 4),
                    "new_2900": total(25000, "бензин", 2900, 1), "new_2000": total(25000, "бензин", 2000, 1)},
-        "ptd_dt": {"prices": list(PRICES), "rows": {str(k): [v[pr] for pr in PRICES] for k, v in ptd_dt.items()}},
+        "ptd_dt": {"prices": list(PRICES), "rows": {str(k): [v[pr] for pr in PRICES] for k, v in ptd_dt.items()},
+                   # с какой цены б/у 3–5 лет по ПТД дешевле, чем по ДТ
+                   "from_price": min((pr for pr in PRICES if ptd_dt[4][pr] < 0), default=None)},
         "eaeu": {"by_kz": _shares(by_kz), "by_landed": _shares(by_landed)},
         "lux": {"kzt": calc.LUX_THRESHOLD, "eur": calc.LUX_THRESHOLD / calc.EUR},
         "cheap": {"price": 8000,

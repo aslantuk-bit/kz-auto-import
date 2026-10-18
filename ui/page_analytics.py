@@ -2,6 +2,7 @@
 import pandas as pd
 import streamlit as st
 
+import calc
 from ui import charts
 from ui.common import (ROUTE_COLOR, ROUTES, RU_ROUTES, SLOTS, load_rates, load_scenarios, long_components,
                        money, pct)
@@ -46,8 +47,9 @@ def _findings(df, eng, price, age):
 def render():
     df = load_scenarios()
     st.title("Аналитика")
-    st.caption("3 888 расчётов: 9 двигателей × 12 возрастов × 6 цен × 6 маршрутов. Выберите машину-ориентир — "
-               "графики ниже пересчитаются для неё.")
+    st.caption("3 888 расчётов: 9 двигателей × 12 возрастов × 6 цен × 6 маршрутов. Машины из третьих стран — "
+               f"с доставкой {money(calc.DELIVERY_EUR)} € до границы ЕАЭС (по ДТ она в таможенной стоимости, "
+               "по ПТД — нет). Выберите машину-ориентир — графики ниже пересчитаются для неё.")
     eng, price, age = _controls(df)
     for line in _findings(df, eng, price, age):
         st.markdown("- " + line)

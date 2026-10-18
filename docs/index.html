@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Unbounded:wght@500;600&display=swap">
-<link rel="stylesheet" href="style.css?v=1.1.2">
+<link rel="stylesheet" href="style.css?v=1.2.0">
 </head>
 <body>
 <header class="top">
@@ -45,14 +45,19 @@
         <div class="card">
           <form class="car" id="car" autocomplete="off">
             <div class="field">
-              <label for="price">Стоимость</label>
+              <label for="price">Цена покупки</label>
               <div class="row-price">
                 <input type="number" id="price" min="0" step="500" value="15000" inputmode="decimal">
                 <select id="cur" aria-label="Валюта">
                   <option>EUR</option><option>USD</option><option>CNY</option><option>RUB</option><option>KZT</option>
                 </select>
               </div>
-              <p class="hint">Цена сделки плюс доставка до границы ЕАЭС. Для ПТД — цена покупки без доставки.</p>
+              <p class="hint">По договору, без доставки.</p>
+            </div>
+            <div class="field">
+              <label for="deliv">Доставка и страховка до границы ЕАЭС</label>
+              <input type="number" id="deliv" min="0" step="100" value="2000" inputmode="decimal">
+              <p class="hint">В той же валюте. По ДТ входит в таможенную стоимость и увеличивает пошлину и НДС, по ПТД — нет; для маршрутов через ЕАЭС не учитывается. Ориентиры: автовоз из Китая $2,5–4,5 тыс., из США $3,6–4,6 тыс.</p>
             </div>
             <div class="field">
               <label for="fuel">Двигатель</label>
@@ -72,8 +77,8 @@
               <div class="field"><label for="year">Год выпуска</label><select id="year"></select></div>
               <div class="field"><label for="month">Месяц выпуска</label><select id="month"></select></div>
             </div>
-            <label class="check"><input type="checkbox" id="market"> Добавить рыночные расходы</label>
-            <p class="hint">ОГПО, брокер, СВХ, СБКТС, ЭПТС — по серединам рыночных диапазонов, это не госплатежи.</p>
+            <label class="check"><input type="checkbox" id="market"> Добавить доставку и рыночные расходы</label>
+            <p class="hint">Сама доставка, ОГПО, брокер, СВХ, СБКТС, ЭПТС — по серединам рыночных диапазонов, это не госплатежи.</p>
             <button type="button" class="btn" id="share">Скопировать ссылку на расчёт</button>
             <p class="hint" id="share-status" aria-live="polite"></p>
           </form>
@@ -108,6 +113,16 @@
           </div>
         </div>
       </div>
+      <div class="stack" style="margin-top:20px">
+        <div class="card stack">
+          <h2 class="section-title">ДТ и ПТД: в чём разница</h2>
+          <div class="table-wrap gl-cmp"><table id="gl-cmp"></table></div>
+        </div>
+        <div class="card stack">
+          <h2 class="section-title">Термины и сокращения</h2>
+          <div id="gl-terms"></div>
+        </div>
+      </div>
     </section>
 
     <section id="savings" role="tabpanel" hidden>
@@ -119,7 +134,7 @@
         <div class="card stack">
           <div>
             <h2 class="section-title">Машина-ориентир</h2>
-            <p class="note">Графики пересчитываются для выбранной машины. Расчёт по тем же формулам, что и калькулятор: 9 двигателей × 12 возрастов × 6 цен × 6 маршрутов.</p>
+            <p class="note">Графики пересчитываются для выбранной машины. Расчёт по тем же формулам, что и калькулятор: 9 двигателей × 12 возрастов × 6 цен × 6 маршрутов. Машины из третьих стран — с доставкой <span id="an-deliv">2 000</span> € до границы ЕАЭС: по ДТ она в таможенной стоимости, по ПТД — нет.</p>
           </div>
           <div class="controls">
             <div class="field"><label for="an-engine">Двигатель</label><select id="an-engine"></select></div>
@@ -199,7 +214,7 @@
           <h2 class="section-title">О данных</h2>
           <p>Сделано бесплатно, чтобы помочь тем, кто везёт машину в Казахстан: без регистрации, рекламы и платы. Пользуйтесь и делитесь ссылкой. Автор — <b>TAS · Aseke</b>.</p>
           <p>Ставки собраны по текстам нормативных актов на 15.10.2026: Единый таможенный тариф ЕАЭС (Решение Совета ЕЭК № 80), перечень ставок РК по обязательствам ВТО (Решение № 59), ставки для физлиц (Решение № 107), Налоговый кодекс РК от 18.07.2025 № 214-VIII, Правила РОП и Методика утилизационного платежа (приказ МЭПР № 54 от 20.03.2026), постановление Правительства РК № 171 о таможенных сборах.</p>
-          <p>Расчёты справочные и не заменяют таможенную декларацию и разъяснения госорганов. Пошлина считается от таможенной стоимости в евро по курсу НБРК; возраст машины для таможни — полные годы с даты выпуска, для сбора за регистрацию — «включая год выпуска».</p>
+          <p>Расчёты справочные и не заменяют таможенную декларацию и разъяснения госорганов. По ДТ пошлина, НДС и акциз 10% считаются от таможенной стоимости — цены сделки плюс доставка и страховка до границы ЕАЭС, в евро по курсу НБРК; по ПТД база — цена покупки без доставки. Возраст машины для таможни — полные годы с даты выпуска, для сбора за регистрацию — «включая год выпуска». Термины — внизу вкладки «Калькулятор».</p>
           <p>Исходники, база в Excel и SQLite, приложение для Mac — <a href="https://github.com/aslantuk-bit/kz-auto-import">github.com/aslantuk-bit/kz-auto-import</a>. Лицензия MIT.</p>
         </div>
         <div class="card">
@@ -218,7 +233,7 @@
 </main>
 <footer><div class="wrap"><span>Автор — TAS · Aseke</span><span>Бесплатно, в помощь всем</span><span>Ставки на 15.10.2026</span><span>Справочный расчёт, не официальная позиция госорганов</span><a href="https://github.com/aslantuk-bit/kz-auto-import">Исходники на GitHub</a></div></footer>
 <div class="tip" id="tip" hidden></div>
-<script src="calc.js?v=1.1.2"></script>
-<script src="app.js?v=1.1.2"></script>
+<script src="calc.js?v=1.2.0"></script>
+<script src="app.js?v=1.2.0"></script>
 </body>
 </html>

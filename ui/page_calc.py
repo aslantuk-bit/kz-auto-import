@@ -3,6 +3,7 @@ import pandas as pd
 import streamlit as st
 
 import calc
+import glossary
 from ui import charts
 from ui.common import (COMP_LABEL, COMP_NORM, COMPONENTS, FUEL_LABEL, ROUTES, RU_ROUTES, TODAY,
                        fx_rates, long_components, money, pct)
@@ -18,10 +19,15 @@ def _inputs():
     fx = fx_rates()
     st.subheader("Машина")
     c1, c2 = st.columns([3, 2])
-    price = c1.number_input("Стоимость", min_value=0.0, value=15000.0, step=500.0, format="%.0f", key="calc_price")
+    price = c1.number_input("Цена покупки", min_value=0.0, value=15000.0, step=500.0, format="%.0f", key="calc_price")
     cur = c2.selectbox("Валюта", list(fx), index=0, key="calc_cur")
-    st.caption("Цена сделки плюс доставка до границы ЕАЭС. Для ПТД берётся цена покупки без доставки. "
-               f"Курсы НБРК на {TODAY:%d.%m.%Y}.")
+    deliv = st.number_input("Доставка и страховка до границы ЕАЭС", min_value=0.0, value=2000.0, step=100.0,
+                            format="%.0f", key="calc_deliv",
+                            help="В той же валюте, что и цена. Ориентиры: автовоз из Китая $2,5–4,5 тыс., "
+                                 "из США $3,6–4,6 тыс. Дорога по ЕАЭС не входит, если выделена в документах.")
+    st.caption("Цена — по договору, без доставки. По ДТ доставка входит в таможенную стоимость и увеличивает "
+               "пошлину и НДС; по ПТД база — только цена покупки. Для маршрутов через ЕАЭС доставка из третьих "
+               f"стран не учитывается. Курсы НБРК на {TODAY:%d.%m.%Y}.")
     fuel = st.selectbox("Двигатель", list(FUEL_LABEL), format_func=FUEL_LABEL.get, key="calc_fuel")
     ev = fuel == "электро"
     vol = st.number_input("Объём двигателя, см³", min_value=0, max_value=9000, value=2000,
@@ -29,10 +35,12 @@ def _inputs():
     c3, c4 = st.columns(2)
     year = c3.selectbox("Год выпуска", list(range(TODAY.year, 1994, -1)), index=4, key="calc_year")
     month = c4.selectbox("Месяц выпуска", list(range(1, 13)), index=5, key="calc_month")
-    market = st.toggle("Добавить рыночные расходы", value=False, key="calc_market",
-                       help="ОГПО, брокер, СВХ, СБКТС, ЭПТС — по серединам рыночных диапазонов, не госплатежи.")
+    market = st.toggle("Доставка и рыночные расходы", value=False, key="calc_market",
+                       help="Сама доставка, ОГПО, брокер, СВХ, СБКТС, ЭПТС — по серединам рыночных диапазонов, "
+                            "не госплатежи.")
     price_eur = price * fx[cur] / fx["EUR"]
-    return price_eur, fuel, 0 if ev else int(vol), year, month, market
+    deliv_eur = deliv * fx[cur] / fx["EUR"]
+    return price_eur, deliv_eur, fuel, 0 if ev else int(vol), year, month, market
 
 
 def render():
@@ -41,11 +49,11 @@ def render():
                f"Ставки на {TODAY:%d.%m.%Y}, МРП {money(calc.MRP)} тг.")
     left, right = st.columns([1, 2.4], gap="large")
     with left:
-        price_eur, fuel, vol, year, month, with_market = _inputs()
+        price_eur, deliv_eur, fuel, vol, year, month, with_market = _inputs()
     age, age_reg = _ages(year, month)
     rows = []
     for rid, mode, origin, label, who in ROUTES:
-        car = calc.Car(price_eur, fuel, vol, age, mode, origin, age_reg)
+        car = calc.Car(price_eur, fuel, vol, age, mode, origin, age_reg, deliv_eur)
         r = calc.calc(car)
         r["акциз"] = r["акциз_объём"] + r["акциз_10pct"]
         rows.append({"id": rid, "маршрут": label, "как": who, **r})
@@ -60,9 +68,11 @@ def render():
         st.markdown(f"Дешевле всего: **{best['маршрут']}** — {best['как'][0].lower() + best['как'][1:]}.")
         m2, m3 = st.columns(2)
         m2.metric("Платежи", money(best[total_col]) + " тг",
-                  help="Обязательные госплатежи и утильсбор" + (" плюс рыночные расходы" if with_market else ""))
+                  help="Обязательные госплатежи и утильсбор" + (" плюс доставка и рыночные расходы" if with_market else ""))
         m3.metric("От стоимости машины", pct(100 * best[total_col] / best["стоимость_кзт"]))
-        st.caption(f"Стоимость {money(best['стоимость_кзт'])} тг ({money(price_eur)} €). "
+        customs = df.loc[df["id"] == "dt", "таможенная_стоимость_кзт"].iloc[0]
+        st.caption(f"Цена покупки {money(best['стоимость_кзт'])} тг ({money(price_eur)} €), "
+                   f"таможенная стоимость по ДТ с доставкой — {money(customs)} тг. "
                    f"Для таможни машине {age} полных лет, для сбора за регистрацию — {age_reg} "
                    "(считается «включая год выпуска»).")
         show_ru = st.toggle("Показать Россию и Беларусь на графике", value=False, key="calc_show_ru",
@@ -102,6 +112,9 @@ def render():
                      for k, _, _ in COMPONENTS if r[k] > 0]
             lines.append({"Платёж": "Итого обязательные", "Сумма, тг": money(r["итого_обязательные"]), "Норма": ""})
             if with_market:
+                if r["доставка_кзт"]:
+                    lines.append({"Платёж": "Доставка и страховка до границы ЕАЭС", "Сумма, тг": money(r["доставка_кзт"]),
+                                  "Норма": "ваша сумма; по ДТ входит в таможенную стоимость (ТК ЕАЭС ст. 40)"})
                 lines.append({"Платёж": "Рыночные расходы (оценка)", "Сумма, тг": money(r["рыночные_оценка"]),
                               "Норма": "ОГПО, брокер, СВХ, СБКТС, ЭПТС — рыночные диапазоны"})
             st.dataframe(pd.DataFrame(lines), hide_index=True, use_container_width=True)
@@ -110,3 +123,17 @@ def render():
                     st.warning(n)
             st.caption(f"После регистрации — налог на транспорт около {money(r['налог_на_транспорт_год'])} тг в год "
                        "(НК ст. 565).")
+
+    _glossary()
+
+
+def _glossary():
+    st.divider()
+    st.subheader("ДТ и ПТД: в чём разница")
+    st.markdown("| | ДТ — декларация на товары | ПТД — пассажирская таможенная декларация |\n|---|---|---|\n"
+                + "\n".join(f"| **{k}** | {dt} | {ptd} |" for k, dt, ptd in glossary.DT_VS_PTD))
+    st.subheader("Термины и сокращения")
+    groups = dict.fromkeys(g for g, _, _ in glossary.TERMS)
+    for g in groups:
+        with st.expander(g):
+            st.markdown("\n".join(f"- **{t}** — {d}" for gg, t, d in glossary.TERMS if gg == g))

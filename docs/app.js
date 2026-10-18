@@ -8,7 +8,7 @@
   const pct = (n, d = 0) => n.toFixed(d).replace(".", ",") + "%";
   const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
-  const data = await (await fetch("data.json?v=1.1.2")).json();
+  const data = await (await fetch("data.json?v=1.2.0")).json();
   const K = KZCalc.make(data.constants);
   const C = data.constants;
   const TODAY = { y: 2026, m: 10 };
@@ -144,7 +144,10 @@
 
   const partsOf = (r, withMarket = false) => {
     const p = COMPONENTS.map(([k, label, , color]) => ({ key: k, label, color, value: r[k] }));
-    if (withMarket) p.push({ key: "market", label: "Рыночные расходы (оценка)", color: "--ink-3", value: r.market });
+    if (withMarket) {
+      p.push({ key: "delivery", label: "Доставка до границы ЕАЭС", color: "--ink-2", value: r.delivery });
+      p.push({ key: "market", label: "Рыночные расходы (оценка)", color: "--ink-3", value: r.market });
+    }
     return p;
   };
 
@@ -167,35 +170,39 @@
   yearSel.value = 2022; monthSel.value = 6;
   let selectedRoute = null;
 
-  // Ссылка на расчёт: #calc?p=15000&c=EUR&f=бензин&v=2000&y=2022&m=6&mk=1
+  // Ссылка на расчёт: #calc?p=15000&d=2000&c=EUR&f=бензин&v=2000&y=2022&m=6&mk=1
+  // (в ссылках до версии 1.2.0 параметра d нет: доставка тогда была внутри цены, поэтому d = 0)
   const [hashTab, hashQuery] = location.hash.slice(1).split("?");
   if (hashQuery) {
     const q = new URLSearchParams(hashQuery);
     const set = (id, v) => v != null && ($("#" + id).value = v);
-    set("price", q.get("p")); set("cur", q.get("c")); set("fuel", q.get("f")); set("cc", q.get("v"));
+    set("price", q.get("p")); set("deliv", q.get("d") ?? 0); set("cur", q.get("c")); set("fuel", q.get("f")); set("cc", q.get("v"));
     set("year", q.get("y")); set("month", q.get("m")); $("#market").checked = q.get("mk") === "1";
   }
 
   function readCar() {
-    const price = Math.max(+$("#price").value || 0, 0), cur = $("#cur").value, fuel = $("#fuel").value;
+    const price = Math.max(+$("#price").value || 0, 0), deliv = Math.max(+$("#deliv").value || 0, 0);
+    const cur = $("#cur").value, fuel = $("#fuel").value;
     const ev = fuel === "электро";
     $("#cc").disabled = ev;
     const cc = ev ? 0 : Math.max(Math.round(+$("#cc").value || 0), 0);
     const y = +yearSel.value, m = +monthSel.value;
     const months = (TODAY.y - y) * 12 + (TODAY.m - m);
-    return { priceEur: (price * data.fx[cur]) / data.fx.EUR, price, cur, fuel, cc, age: Math.max(Math.floor(months / 12), 0), ageReg: TODAY.y - y, y, m };
+    const toEur = (x) => (x * data.fx[cur]) / data.fx.EUR;
+    return { priceEur: toEur(price), delivEur: toEur(deliv), price, deliv, cur, fuel, cc, age: Math.max(Math.floor(months / 12), 0), ageReg: TODAY.y - y, y, m };
   }
 
   function renderCalc() {
     const car = readCar(), market = $("#market").checked, key = market ? "total_market" : "total";
-    const rows = ROUTES.map((r) => ({ ...r, ...K.calc({ price_eur: car.priceEur, fuel: car.fuel, cc: car.cc, age: car.age, mode: r.mode, origin: r.origin, age_reg: car.ageReg }) }));
+    const rows = ROUTES.map((r) => ({ ...r, ...K.calc({ price_eur: car.priceEur, delivery_eur: car.delivEur, fuel: car.fuel, cc: car.cc, age: car.age, mode: r.mode, origin: r.origin, age_reg: car.ageReg }) }));
     const ok = rows.filter((r) => !r.blocked);
     const best = ok.reduce((a, b) => (b[key] < a[key] ? b : a), ok[0]);
     if (!selectedRoute || !rows.some((r) => r.id === selectedRoute)) selectedRoute = best.id;
     $("#best").innerHTML = `Дешевле всего: <b>${esc(best.label)}</b> — ${esc(best.who[0].toLowerCase() + best.who.slice(1))}.`;
     $("#best-total").innerHTML = `${fmt(best[key])}<small>тг</small>`;
     $("#best-share").textContent = pct((100 * best[key]) / best.value_kzt);
-    $("#ages").textContent = `Стоимость ${fmt(best.value_kzt)} тг (${fmt(car.priceEur)} €). Для таможни машине ${car.age} полных лет, для сбора за регистрацию — ${car.ageReg} (считается «включая год выпуска»).`;
+    const dt = rows.find((x) => x.id === "dt");
+    $("#ages").textContent = `Цена покупки ${fmt(best.value_kzt)} тг (${fmt(car.priceEur)} €), таможенная стоимость по ДТ с доставкой — ${fmt(dt.customs_value)} тг. Для таможни машине ${car.age} полных лет, для сбора за регистрацию — ${car.ageReg} (считается «включая год выпуска»).`;
 
     const showRu = $("#show-ru").checked;
     const plot = rows.filter((r) => showRu || !isRu(r));
@@ -211,6 +218,7 @@
     $("#route-who").textContent = r.who + (r.duty_basis !== "—" ? ` · ставка пошлины: ${r.duty_basis}` : "");
     const lines = COMPONENTS.filter(([k]) => r[k] > 0).map(([k, label, norm]) => `<tr><td>${label}</td><td class="num">${fmt(r[k])}</td><td>${esc(norm)}</td></tr>`);
     lines.push(`<tr class="total"><td>Итого обязательные</td><td class="num">${fmt(r.total)}</td><td></td></tr>`);
+    if (market && r.delivery) lines.push(`<tr><td>Доставка и страховка до границы ЕАЭС</td><td class="num">${fmt(r.delivery)}</td><td>ваша сумма; по ДТ входит в таможенную стоимость (ТК ЕАЭС ст. 40)</td></tr>`);
     if (market) lines.push(`<tr><td>Рыночные расходы (оценка)</td><td class="num">${fmt(r.market)}</td><td>ОГПО, брокер, СВХ, СБКТС, ЭПТС — рыночные диапазоны</td></tr>`);
     $("#route-table").innerHTML = `<thead><tr><th>Платёж</th><th class="num">Сумма, тг</th><th>Норма</th></tr></thead><tbody>${lines.join("")}</tbody>`;
     $("#route-flags").innerHTML = r.flags.map((f) => `<div class="flag">${esc(f)}</div>`).join("");
@@ -221,13 +229,24 @@
   $("#show-ru").addEventListener("change", renderCalc);
   $("#share").addEventListener("click", async () => {
     const c = readCar();
-    const q = new URLSearchParams({ p: c.price, c: c.cur, f: c.fuel, v: c.cc, y: c.y, m: c.m, mk: $("#market").checked ? 1 : 0 });
+    const q = new URLSearchParams({ p: c.price, d: c.deliv, c: c.cur, f: c.fuel, v: c.cc, y: c.y, m: c.m, mk: $("#market").checked ? 1 : 0 });
     const url = location.origin + location.pathname + "#calc?" + q.toString();
     history.replaceState(null, "", "#calc?" + q.toString());
     try { await navigator.clipboard.writeText(url); $("#share-status").textContent = "Ссылка скопирована — по ней откроется этот же расчёт."; }
     catch { $("#share-status").textContent = url; }
   });
 
+
+  /* ---------- термины ---------- */
+  function renderGlossary() {
+    const g = data.glossary;
+    $("#gl-cmp").innerHTML = `<thead><tr><th></th><th>ДТ — декларация на товары</th><th>ПТД — пассажирская таможенная декларация</th></tr></thead><tbody>` +
+      g.dt_vs_ptd.map(([k, dt, ptd]) => `<tr><td>${esc(k)}</td><td data-label="ДТ">${esc(dt)}</td><td data-label="ПТД">${esc(ptd)}</td></tr>`).join("") + "</tbody>";
+    const groups = [...new Set(g.terms.map(([grp]) => grp))];
+    $("#gl-terms").innerHTML = groups.map((grp) => `<details class="q"><summary>${esc(grp)}</summary><dl class="terms">${
+      g.terms.filter(([x]) => x === grp).map(([, t, d]) => `<dt>${esc(t)}</dt><dd>${esc(d)}</dd>`).join("")}</dl></details>`).join("");
+  }
+  renderGlossary();
 
   /* ---------- как сэкономить ---------- */
   function renderSavings() {
@@ -240,7 +259,7 @@
       return `<td class="num" style="color:${val < 0 ? "var(--div-neg)" : "var(--ink-2)"};font-weight:${val < 0 ? 600 : 400}">${s}</td>`; }).join("")}</tr>`).join("");
     $("#sv").innerHTML = [
       card("Самый выгодный профиль", `<p style="margin:0;font-size:16px">Электромобиль или машина с ДВС до 2 000 см³, не старше 2 лет по году выпуска, дешевле ${fmt(Math.floor(d.lux.eur / 100) * 100)} €, ввоз из Китая, Кореи или Японии по ДТ. Для дорогой машины 3–5 лет — ПТД.</p>
-        <p class="note">Посчитано тем же калькулятором по ${fmt(d.configs)} машинам × 6 маршрутов: 9 двигателей, возраст 0–15 лет, 12 цен от 5 до 150 тыс. €. Варианты, которые нельзя поставить на учёт, исключены.</p>`),
+        <p class="note">Посчитано тем же калькулятором по ${fmt(d.configs)} машинам × 6 маршрутов: 9 двигателей, возраст 0–15 лет, 12 цен от 5 до 150 тыс. €. Машины из третьих стран — с доставкой ${fmt(d.delivery_eur)} € до границы ЕАЭС: по ДТ она входит в таможенную стоимость, по ПТД — нет. Варианты, которые нельзя поставить на учёт, исключены.</p>`),
       card("Не ввозить через Россию и Беларусь", `<p style="margin:0">В лучшем случае дороже лучшего маршрута на <b>${m(d.ru.min)}</b>, в среднем — на <b>${m(d.ru.median)}</b>. Причина — утильсбор по коэффициенту 2 (приказ МЭПР № 54).</p>`),
       card("Электромобиль — из третьих стран по ДТ", `<p style="margin:0">Выигрывает в ${d.ev.wins} из ${d.ev.n} вариантов: пошлина 0% по перечню ВТО, утильсбора нет, остаются НДС 16% и сборы. Так же оформляется гибрид, у которого мощнее электромотор.</p>
         ${figs([["Электромобиль", m(ev["электро"])], ["Гибрид (мощнее электромотор)", m(ev["гибрид_эл"])], ["Бензин 2,0 л", m(ev["бензин"])]])}
@@ -253,9 +272,9 @@
         <tr><td>3 000 → 3 100 см³</td><td>акциз 100 тг за каждый см³ всего объёма, утильсбор 11,5</td><td class="num">+${m(v.v3000_3100)}</td></tr></tbody></table></div>
         <p style="margin:0">Парадокс ЕТТ: новая бензиновая машина 2,8–3,0 л платит пошлину 12,5% вместо 15%, поэтому новая 2,9 л (${fmt(v.new_2900)} тг) дешевле новой 2,0 л (${fmt(v.new_2000)} тг) той же цены.</p>
         <p class="note">Машина за ${fmt(v.price)} €; переходы — для 4 лет, сравнение 2,9 и 2,0 л — для 1 года.</p>`),
-      card("ПТД или ДТ для физлица", `<p class="note" style="margin:0">ПТД минус ДТ, млн тг, бензин 2,0 л. Минус (выделен) — ПТД дешевле.</p>
+      card("ПТД или ДТ для физлица", `<p class="note" style="margin:0">ПТД минус ДТ, млн тг, бензин 2,0 л, доставка ${fmt(d.delivery_eur)} € (по ДТ она в базе, по ПТД — нет). Минус (выделен) — ПТД дешевле.</p>
         <div class="table-wrap"><table><thead><tr><th>Возраст</th>${t.prices.map((p) => `<th class="num">${fmt(p)} €</th>`).join("")}</tr></thead><tbody>${ptdRows}</tbody></table></div>
-        <p style="margin:0">Новые машины выгоднее по ДТ всегда. Для б/у 3–5 лет единая ставка считается от объёма, а не от цены, поэтому с 20 тыс. € ПТД выигрывает всё сильнее. Старше 5 лет — только ДТ: ЭПТС по ПТД не оформят. Минус ДТ — условный выпуск: машина обращается только в РК.</p>`),
+        <p style="margin:0">Новые машины выгоднее по ДТ всегда. Для б/у 3–5 лет единая ставка считается от объёма, а не от цены, поэтому с ${fmt(t.from_price)} € ПТД выигрывает всё сильнее. Чем дороже доставка, тем раньше ПТД становится выгоднее. Старше 5 лет — только ДТ: ЭПТС по ПТД не оформят. Минус ДТ — условный выпуск: машина обращается только в РК.</p>`),
       card("Кыргызстан и Армения: дёшево на бумаге", `<p style="margin:0">По платежам в РК физлицо из Кыргызстана или Армении выигрывает в <b>${Math.round(d.eaeu.by_kz.kg_fl || 0)}%</b> вариантов: пошлины нет, НДС с физлица не берут. Если прибавить пошлину ЕТТ, уже заложенную в цену машины там, — в <b>${Math.round(d.eaeu.by_landed.kg_fl || 0)}%</b>. Это оценка сверху: местный НДС, сборы и маржа перепродавца не учтены.</p>
         <p style="margin:0">Правило: маршрут выгоден, только если машина там стоит не дороже той же машины в Китае или Корее плюс 15–20%. Регулярный ввоз могут признать предпринимательским — тогда НДС 16%. Электромобили, ввезённые туда по льготе ЕАЭС, резидентам РК передавать нельзя.</p>`),
       card("Цена и статус ввозящего", `<ul class="findings">
@@ -271,13 +290,14 @@
   function buildGrid() {
     grid = [];
     for (const r of ROUTES) for (const [fuel, cc] of S.engines) for (const age of S.ages) for (const price of S.prices)
-      grid.push({ route: r, engine: engineLabel(fuel, cc), fuel, cc, age, price, ...K.calc({ price_eur: price, fuel, cc, age, mode: r.mode, origin: r.origin, age_reg: null }) });
+      grid.push({ route: r, engine: engineLabel(fuel, cc), fuel, cc, age, price, ...K.calc({ price_eur: price, delivery_eur: C.DELIVERY_EUR, fuel, cc, age, mode: r.mode, origin: r.origin, age_reg: null }) });
   }
   const anEngine = $("#an-engine"), anPrice = $("#an-price"), anAge = $("#an-age");
   S.engines.forEach(([f, cc]) => anEngine.add(new Option(engineLabel(f, cc), engineLabel(f, cc))));
   S.prices.forEach((p) => anPrice.add(new Option(fmt(p) + " €", p)));
   S.ages.forEach((a) => anAge.add(new Option(a, a)));
   anEngine.value = "Бензин 2,0 л"; anPrice.value = 15000; anAge.value = 4;
+  $("#an-deliv").textContent = fmt(C.DELIVERY_EUR);
 
   function renderAnalytics() {
     if (!grid) buildGrid();

@@ -14,6 +14,7 @@ sys.path.insert(0, str(ROOT))
 import pandas as pd  # noqa: E402
 
 import calc  # noqa: E402
+import glossary  # noqa: E402
 import savings  # noqa: E402
 from paths import OUT  # noqa: E402
 
@@ -45,7 +46,7 @@ def records(df):
 def constants():
     return {
         "MRP": calc.MRP, "EUR": calc.EUR, "VAT": calc.VAT, "CUSTOMS_FEE_MRP": calc.CUSTOMS_FEE_MRP,
-        "LUX_THRESHOLD": calc.LUX_THRESHOLD, "MARKET": calc.MARKET,
+        "LUX_THRESHOLD": calc.LUX_THRESHOLD, "MARKET": calc.MARKET, "DELIVERY_EUR": calc.DELIVERY_EUR,
         "ETT_PETROL_EDGES": calc.ETT_PETROL_EDGES, "ETT_PETROL_MIN_3_7": calc.ETT_PETROL_MIN_3_7,
         "ETT_PETROL_OVER7": calc.ETT_PETROL_OVER7, "ETT_DIESEL_EDGES": calc.ETT_DIESEL_EDGES,
         "ETT_DIESEL_MIN_3_7": calc.ETT_DIESEL_MIN_3_7, "ETT_DIESEL_OVER7": calc.ETT_DIESEL_OVER7,
@@ -77,6 +78,7 @@ def main():
             "статья": "article", "url": "url", "действует_с": "from", "достоверность": "rel",
             "статус_проверки": "status", "примечание": "note"})),
         "savings": savings.compute(),
+        "glossary": {"dt_vs_ptd": glossary.DT_VS_PTD, "terms": glossary.TERMS},
         "sources": records(sources.rename(columns={"правовой_акт": "act", "записей": "n", "блоки": "blocks"})),
     }
     out = DOCS / "data.json"

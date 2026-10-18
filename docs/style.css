@@ -178,6 +178,19 @@ tr.detail td { background: var(--bg); cursor: default; }
 details.q { border-bottom: 1px solid var(--line-2); padding: 10px 0; }
 details.q summary { cursor: pointer; font-weight: 500; }
 details.q p { margin: 6px 0 0; color: var(--ink-2); }
+.gl-cmp td { min-width: 220px; }
+.gl-cmp td:first-child { min-width: 120px; font-weight: 500; }
+@media (max-width: 560px) {   /* на телефоне — карточки вместо трёх колонок */
+  .gl-cmp thead { display: none; }
+  .gl-cmp table, .gl-cmp tbody, .gl-cmp tr, .gl-cmp td { display: block; min-width: 0; width: auto; }
+  .gl-cmp tr { border-bottom: 1px solid var(--line); padding: 6px 0; }
+  .gl-cmp td { border: 0; padding: 4px 12px; }
+  .gl-cmp td[data-label]::before { content: attr(data-label) " — "; font-weight: 600; color: var(--ink); }
+}
+dl.terms { display: grid; grid-template-columns: minmax(140px, max-content) 1fr; gap: 8px 18px; margin: 8px 0 4px; }
+dl.terms dt { font-weight: 600; }
+dl.terms dd { margin: 0; color: var(--ink-2); }
+@media (max-width: 560px) { dl.terms { grid-template-columns: 1fr; gap: 2px; } dl.terms dd { margin-bottom: 8px; } }
 
 footer { color: var(--ink-3); font-size: 13px; border-top: 1px solid var(--line); }
 footer .wrap { padding-block: 18px 28px; display: flex; flex-wrap: wrap; gap: 6px 18px; }

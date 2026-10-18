@@ -18,6 +18,7 @@ PORT = 8790
 URL = f"http://localhost:{PORT}"
 FROZEN = getattr(sys, "frozen", False)
 DATA_DIRS = ("sources/raw", "out")
+DATA_VERSION = "1.2.0"   # поднимать, когда меняется состав данных в бандле (сценарии, таблицы)
 
 
 def bundle_dir():
@@ -31,13 +32,25 @@ def data_home():
 
 
 def ensure_data(home):
-    """Первый запуск собранного приложения: копирует базу из бандла в Application Support."""
+    """Копирует базу из бандла в Application Support: при первом запуске и при новой версии данных.
+
+    Прежние данные при смене версии не удаляются, а переносятся в backup-<версия>-<время>.
+    """
     (home / "logs").mkdir(parents=True, exist_ok=True)
     if home == bundle_dir():
         return
+    stamp = home / "data_version.txt"
+    old = stamp.read_text().strip() if stamp.exists() else "до-1.2.0"
+    if old != DATA_VERSION and any((home / sub).exists() for sub in DATA_DIRS):
+        backup = home / f"backup-{old}-{time.strftime('%Y%m%d-%H%M%S')}"
+        for sub in DATA_DIRS:
+            if (home / sub).exists():
+                (backup / sub).parent.mkdir(parents=True, exist_ok=True)
+                shutil.move(str(home / sub), str(backup / sub))
     for sub in DATA_DIRS:
         if not (home / sub).exists():
             shutil.copytree(bundle_dir() / sub, home / sub)
+    stamp.write_text(DATA_VERSION)
 
 
 def port_busy():
