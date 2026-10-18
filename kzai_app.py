@@ -18,7 +18,7 @@ PORT = 8790
 URL = f"http://localhost:{PORT}"
 FROZEN = getattr(sys, "frozen", False)
 DATA_DIRS = ("sources/raw", "out")
-DATA_VERSION = "1.3.0"   # поднимать, когда меняется состав данных в бандле (сценарии, таблицы)
+DATA_VERSION = "1.4.0"   # поднимать, когда меняется состав данных в бандле (сценарии, таблицы)
 
 
 def bundle_dir():
@@ -91,6 +91,14 @@ def main():
         serve()
         return
     ensure_data(home)
+    if "--actualize" in sys.argv:   # «…/MacOS/VvozAuto --actualize [--offline]» — актуализация без окна
+        sys.path.insert(0, str(bundle_dir()))
+        import actualize
+        out = actualize.run(offline="--offline" in sys.argv, progress=lambda t: print("·", t, flush=True))
+        for i in out["пункты"]:
+            print(f"[{i['статус']:6}] {i['этап']} · {i['что']}: {i['подробно']}")
+        print("итог:", out["итог"], "ставки сверены", out["as_of"])
+        return
     if not port_busy() and not launch(home):
         subprocess.run(["open", str(home / "logs" / "server.log")], check=False)
         return

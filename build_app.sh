@@ -10,21 +10,21 @@ for f in ставки.csv параметры.csv условия.csv источн
   DATA+=(--add-data "out/$f:out")
 done
 HIDDEN=()
-for m in paths build calc report test_calc savings glossary ui ui.common ui.charts ui.page_calc ui.page_analytics ui.page_rates ui.page_misc ui.page_savings; do
+for m in paths build calc report test_calc savings glossary actualize export_web certifi ui ui.common ui.charts ui.page_calc ui.page_analytics ui.page_rates ui.page_misc ui.page_savings; do
   HIDDEN+=(--hidden-import "$m")
 done
 rm -rf .pyibuild dist/VvozAuto.app "dist/$APP"
 $PY -m PyInstaller --noconfirm --windowed --workpath .pyibuild --name VvozAuto --icon icons/app.icns \
   --osx-bundle-identifier kz.aslantuk.vvoz-auto --paths . \
   --add-data "app.py:." --add-data "ui:ui" --add-data "sources/raw:sources/raw" "${DATA[@]}" "${HIDDEN[@]}" \
-  --collect-all streamlit --collect-all altair --collect-all pyarrow --collect-all narwhals \
+  --collect-data certifi --collect-all streamlit --collect-all altair --collect-all pyarrow --collect-all narwhals \
   --exclude-module PyInstaller --exclude-module pytest \
   kzai_app.py
 mv dist/VvozAuto.app "dist/$APP"
 PL="dist/$APP/Contents/Info.plist"
 plutil -replace CFBundleName -string "Ввоз авто в РК" "$PL"
 plutil -replace CFBundleDisplayName -string "Ввоз авто в РК" "$PL"
-plutil -replace CFBundleShortVersionString -string "${VERSION:-1.3.0}" "$PL"
+plutil -replace CFBundleShortVersionString -string "${VERSION:-1.4.0}" "$PL"
 plutil -replace LSUIElement -bool true "$PL"
 codesign --force --deep -s - "dist/$APP"
 du -sh "dist/$APP"

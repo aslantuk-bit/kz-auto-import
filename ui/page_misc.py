@@ -1,42 +1,17 @@
-"""Спорные вопросы, обновление базы и выключение приложения."""
-import contextlib
+"""Спорные вопросы, актуализация базы и выключение приложения."""
 import importlib
-import io
 import os
 import signal
 import subprocess
+import sys
 import threading
 from datetime import datetime
 
+import pandas as pd
 import streamlit as st
 
-from ui.common import OUT, ROOT, load_table
-
-
-def _step_build():
-    import build
-    importlib.reload(build).build()
-
-
-def _step_tests():
-    import calc
-    import test_calc
-    importlib.reload(calc)
-    importlib.reload(test_calc).run_all()
-
-
-def _step_scenarios():
-    import calc
-    importlib.reload(calc).write_scenarios()
-
-
-def _step_report():
-    import report
-    importlib.reload(report).main()
-
-
-STEPS = [("Сборка базы ставок", _step_build), ("Проверки калькулятора", _step_tests),
-         ("Сетка сценариев", _step_scenarios), ("Книга Excel", _step_report)]
+import actualize
+from ui.common import OUT, ROOT, as_of_line, load_table
 
 
 def questions():
@@ -49,40 +24,109 @@ def questions():
             st.markdown(f"**Как учтено.** {r['как_учтено']}")
 
 
+ICON = {"ok": "✅", "info": "ℹ️", "warn": "⚠️", "change": "🔄", "fail": "❌"}
+STATUS = {"ok": "в порядке", "info": "к сведению", "warn": "нужна проверка", "change": "найдено новое значение",
+          "fail": "ошибка"}
+
+
+def _after_change():
+    st.cache_data.clear()
+    for m in ("calc", "glossary", "savings"):
+        if m in sys.modules:
+            importlib.reload(sys.modules[m])
+
+
+def _run(offline):
+    with st.status("Актуализация…", expanded=True) as box:
+        data = actualize.run(offline=offline, progress=lambda t: box.write(f"· {t}"))
+        s = data["итог"]
+        bad = s["fail"] or s["warn"] or s["change"]
+        box.update(label="Готово: " + ("есть пункты для проверки" if bad else "всё сверено"),
+                   state="error" if s["fail"] else "complete", expanded=False)
+    _after_change()
+
+
+def _report(data):
+    s = data["итог"]
+    c = st.columns(5)
+    for col, key in zip(c, ("ok", "change", "warn", "fail", "info")):
+        col.metric(f"{ICON[key]} {STATUS[key]}", s[key])
+    st.caption(f"Проверка {datetime.fromisoformat(data['конец']):%d.%m.%Y %H:%M}. Ставки сверены "
+               f"{datetime.fromisoformat(data['as_of']):%d.%m.%Y}: дата сдвигается, только когда все акты и ставки "
+               "совпали с текстами.")
+    todo = [i for i in data["пункты"] if i.get("действие")]
+    if todo:
+        st.subheader("Что нужно решить")
+        for n, i in enumerate(todo):
+            with st.container(border=True):
+                st.markdown(f"{ICON[i['статус']]} **{i['что']}** — {i['подробно']}"
+                            + (f" · [текст акта]({i['ссылка']})" if i.get("ссылка") else ""))
+                a = i["действие"]
+                label = (f"Применить новое значение и пересобрать" if a["type"] == "param"
+                         else "Я проверил ставки — отметить редакцию проверенной")
+                if st.button(label, key=f"act_{n}"):
+                    actualize.apply(a)
+                    if a["type"] == "param":
+                        _run(offline=True)
+                    st.rerun()
+    st.subheader("Все проверки")
+    st.dataframe(pd.DataFrame([{"": ICON[i["статус"]], "Этап": i["этап"], "Что": i["что"], "Результат": i["подробно"],
+                                "Источник": i.get("ссылка")} for i in data["пункты"]]),
+                 hide_index=True, use_container_width=True,
+                 column_config={"Источник": st.column_config.LinkColumn(display_text="открыть")})
+
+
 def update():
-    st.title("Обновление")
-    built = datetime.fromtimestamp((OUT / "ставки.csv").stat().st_mtime)
-    st.markdown(f"База собрана **{built:%d.%m.%Y %H:%M}**. Ставки действуют на 15.10.2026.")
+    st.title("Актуализация")
     st.markdown(
-        "Когда ставка меняется:\n"
-        "1. поправьте запись в `sources/raw/*.json` (A — таможня, B — Налоговый кодекс, C — утильсбор, "
-        "D — регистрация и рынок);\n"
-        "2. если ставка участвует в калькуляторе, поправьте константу в `calc.py` — "
-        "проверки не дадут базе и калькулятору разойтись (в собранном приложении `calc.py` "
-        "внутри программы: такая правка требует новой сборки, `build_app.sh`);\n"
-        "3. новый МРП меняется в `build.py`, `calc.py` и параметрах;\n"
-        "4. нажмите «Пересобрать».")
-    st.caption(f"Папка данных: {ROOT}")
-    if st.button("Пересобрать", type="primary", key="upd_run"):
-        ok = True
-        for title, step in STEPS:
-            with st.status(title, expanded=False) as s:
-                buf = io.StringIO()
-                try:
-                    with contextlib.redirect_stdout(buf):
-                        step()
-                except Exception as e:  # показываем ошибку шага, не роняя страницу
-                    st.code(buf.getvalue()[-3000:] + f"\n{type(e).__name__}: {e}", language=None)
-                    s.update(label=f"{title}: ошибка", state="error", expanded=True)
-                    ok = False
-                    break
-                st.code(buf.getvalue()[-3000:] or "готово", language=None)
-                s.update(label=f"{title}: готово", state="complete")
-        st.cache_data.clear()
-        if ok:
-            st.success("База, сценарии и книга Excel пересобраны.")
-        else:
-            st.error("Пересборка остановилась на шаге с ошибкой — подробности в его выводе выше.")
+        "Одна кнопка проверяет базу и пересобирает всё:\n"
+        "1. **курсы НБРК** на сегодня — применяются сразу;\n"
+        "2. **редакции актов** — НК, Кодекс о таможенном регулировании, ПП № 171, решения ЕЭК № 59 и № 107, "
+        "методика утильсбора, закон об ОГПО, ЕТТ гр. 87 — по зеркалу ИЗПИ и сайту ЕЭК;\n"
+        "3. **ставки в текстах** — НДС, МРП, таможенный сбор, порог акциза 10%: найденное значение сверяется с "
+        "расчётом и **не применяется без вашего подтверждения**;\n"
+        "4. **пересборка** — база ставок, сценарии, «Как сэкономить», Excel, данные сайта;\n"
+        "5. **самопроверка** — нормы калькулятора, сверка констант с базой, сетка сценариев.")
+    st.caption(f"Сейчас: {as_of_line()}. Папка данных: {ROOT}")
+    c1, c2 = st.columns([1, 1])
+    if c1.button("Проверить и актуализировать", type="primary", key="upd_run", use_container_width=True):
+        _run(offline=False)
+    if c2.button("Только пересобрать (без интернета)", key="upd_offline", use_container_width=True):
+        _run(offline=True)
+    data = actualize.last_report()
+    if data:
+        _report(data)
+    else:
+        st.info("Проверок ещё не было — нажмите «Проверить и актуализировать».")
+
+    with st.expander("Задать параметры вручную — например, МРП нового года"):
+        p = actualize.load(actualize.PARAMS)
+        a, b, c, d = st.columns(4)
+        mrp = a.number_input("МРП, тг", value=int(p["MRP"]), step=1, key="pm_mrp")
+        year = b.number_input("Год МРП", value=int(p["MRP_year"]), step=1, key="pm_year")
+        vat = c.number_input("НДС, %", value=float(p["VAT"] * 100), step=1.0, key="pm_vat")
+        fee = d.number_input("Таможенный сбор, МРП", value=int(p["CUSTOMS_FEE_MRP"]), step=1, key="pm_fee")
+        st.caption("Меняйте только по тексту закона. Ставки пошлин, утильсбора и сборов за регистрацию — в "
+                   "sources/raw и calc.py (в собранном приложении — новой сборкой).")
+        if st.button("Сохранить и пересобрать", key="pm_save"):
+            actualize.set_params(MRP=int(mrp), MRP_year=int(year), VAT=round(vat / 100, 4), CUSTOMS_FEE_MRP=int(fee))
+            _run(offline=True)
+            st.rerun()
+
+    st.subheader("Сайт")
+    st.markdown("Сайт aslantuk-bit.github.io/kz-auto-import берёт ставки, курсы и тексты из одного файла "
+                "`data.json`. Кнопка заливает свежий файл в репозиторий — сайт обновится через 1–2 минуты.")
+    if st.button("Обновить сайт", key="upd_site"):
+        try:
+            url = actualize.publish_site()
+            st.success(f"Данные сайта обновлены: [коммит]({url}).")
+        except Exception as e:
+            st.error(f"Не получилось: {e}")
+
+    if actualize.JOURNAL.exists():
+        with st.expander("Журнал проверок"):
+            st.dataframe(pd.read_csv(actualize.JOURNAL).tail(20).iloc[::-1], hide_index=True,
+                         use_container_width=True)
     st.divider()
     st.markdown(f"Книга Excel: `{OUT / 'kz_auto_import_2026-10.xlsx'}`  \nБаза SQLite: `{OUT / 'kz_auto_import.sqlite'}`")
     c1, c2 = st.columns(2)

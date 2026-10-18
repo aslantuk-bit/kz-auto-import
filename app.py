@@ -7,6 +7,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 import streamlit as st  # noqa: E402
 
 from ui import page_analytics, page_calc, page_misc, page_rates, page_savings  # noqa: E402
+from ui.common import as_of_line  # noqa: E402
 
 st.set_page_config(page_title="Ввоз авто в РК", page_icon=":material/directions_car:", layout="wide")
 
@@ -16,10 +17,10 @@ nav = st.navigation([
     st.Page(page_analytics.render, title="Аналитика", url_path="analytics"),
     st.Page(page_rates.render, title="База ставок", url_path="rates"),
     st.Page(page_misc.questions, title="Спорные вопросы", url_path="questions"),
-    st.Page(page_misc.update, title="Обновление", url_path="update"),
+    st.Page(page_misc.update, title="Актуализация", url_path="update"),
 ])
 with st.sidebar:
-    st.caption("Ставки на 15.10.2026 · МРП 4 325 тг · EUR 504,20 тг")
+    st.caption(as_of_line())
     st.caption("Автор — TAS · Aseke. Бесплатно, в помощь всем, кто везёт машину в Казахстан.")
     page_misc.shutdown()
 nav.run()

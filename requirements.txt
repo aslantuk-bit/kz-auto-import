@@ -7,3 +7,6 @@ altair==6.3.0
 # Только для сборки .app (build_app.sh)
 pyinstaller==6.22.3
 pillow==12.3.0
+
+# Актуализация (HTTPS к НБРК, ИЗПИ, ЕЭК)
+certifi==2026.07.22

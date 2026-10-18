@@ -8,10 +8,14 @@
   const pct = (n, d = 0) => n.toFixed(d).replace(".", ",") + "%";
   const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
-  const data = await (await fetch("data.json?v=1.3.0")).json();
+  const data = await (await fetch("data.json?v=1.4.0")).json();
   const K = KZCalc.make(data.constants);
   const C = data.constants;
-  const TODAY = { y: 2026, m: 10 };
+  const now = new Date(), TODAY = { y: now.getFullYear(), m: now.getMonth() + 1 };
+  const dmy = (iso) => iso.split("-").reverse().join(".");
+  $("#asof").textContent = `Ставки сверены ${dmy(data.asOf)} · МРП ${fmt(C.MRP)} тг · EUR ${C.EUR.toFixed(2).replace(".", ",")} тг на ${dmy(data.fxDate)}`;
+  $("#asof-about").textContent = dmy(data.asOf);
+  $("#asof-foot").textContent = `Ставки сверены ${dmy(data.asOf)}`;
 
   const COMPONENTS = [
     ["duty", "Пошлина", "ЕТТ ЕАЭС (Решение № 80) или ставки РК по ВТО (Решение № 59)", "--s1"],

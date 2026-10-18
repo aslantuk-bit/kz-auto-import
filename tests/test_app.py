@@ -60,7 +60,9 @@ def test_rates():
 
 def test_misc():
     check(page("ui.page_misc", "questions"), "спорные вопросы")
-    check(page("ui.page_misc", "update"), "обновление")
+    at = check(page("ui.page_misc", "update"), "актуализация")
+    at.button(key="upd_offline").click()
+    check(at, "актуализация: пересборка без интернета")
 
 
 if __name__ == "__main__":

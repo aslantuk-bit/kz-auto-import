@@ -6,7 +6,7 @@ import calc
 import glossary
 from ui import charts
 from ui.common import (COMP_LABEL, COMP_NORM, COMPONENTS, FUEL_LABEL, ROUTES, RU_ROUTES, TODAY,
-                       fx_rates, long_components, money, pct)
+                       as_of_line, fx_rates, long_components, money, pct)
 
 
 def _ages(year, month):
@@ -28,7 +28,7 @@ def _inputs():
                                  "Для маршрута через Кыргызстан — доставка до границы КР.")
     st.caption("Цена — по договору в третьей стране, без доставки. По ДТ (в РК или в Кыргызстане) доставка входит "
                "в таможенную стоимость и увеличивает пошлину и НДС; по ПТД база — только цена покупки. Для России "
-               f"и Беларуси цена — цена на их рынке. Курсы НБРК на {TODAY:%d.%m.%Y}.")
+               f"и Беларуси цена — цена на их рынке. Курсы НБРК на {calc.FX_DATE:%d.%m.%Y}.")
     fuel = st.selectbox("Двигатель", list(FUEL_LABEL), format_func=FUEL_LABEL.get, key="calc_fuel")
     ev = fuel == "электро"
     vol = st.number_input("Объём двигателя, см³", min_value=0, max_value=9000, value=2000,
@@ -47,7 +47,7 @@ def _inputs():
 def render():
     st.title("Калькулятор ввоза")
     st.caption("Все платежи при ввозе легкового автомобиля в РК с постановкой на учёт, сразу по шести маршрутам. "
-               f"Ставки на {TODAY:%d.%m.%Y}, МРП {money(calc.MRP)} тг.")
+               + as_of_line() + ".")
     left, right = st.columns([1, 2.4], gap="large")
     with left:
         price_eur, deliv_eur, fuel, vol, year, month, with_market = _inputs()

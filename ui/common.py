@@ -6,9 +6,10 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
+import calc
 from paths import HOME as ROOT, OUT  # noqa: E402
 DB = OUT / "kz_auto_import.sqlite"
-TODAY = date(2026, 10, 15)   # дата, на которую собраны ставки
+TODAY = date.today()          # для возраста машины; дата сверки ставок — calc.AS_OF, курсов — calc.FX_DATE
 
 # Палитра: dataviz, категориальные слоты в фиксированном порядке (светлая тема).
 SLOTS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948"]
@@ -95,9 +96,13 @@ def load_scenarios():
 
 
 def fx_rates():
-    p = load_params().set_index("параметр")["значение"]
-    return {"EUR": p["EUR_KZT_15.10.2026"], "USD": p["USD_KZT_15.10.2026"],
-            "CNY": p["CNY_KZT_15.10.2026"], "RUB": p["RUB_KZT_15.10.2026"], "KZT": 1.0}
+    return dict(calc.FX)
+
+
+def as_of_line():
+    """«Ставки на … · МРП … · EUR …» для подписей."""
+    eur = f"{calc.EUR:.2f}".replace(".", ",")
+    return f"Ставки сверены {calc.AS_OF:%d.%m.%Y} · МРП {money(calc.MRP)} тг · EUR {eur} тг на {calc.FX_DATE:%d.%m.%Y}"
 
 
 def long_components(df, id_col):

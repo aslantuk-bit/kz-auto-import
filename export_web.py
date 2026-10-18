@@ -1,6 +1,7 @@
-"""Готовит docs/data.json для веб-версии: константы калькулятора из calc.py и база из out/.
+"""Готовит data.json для веб-версии: константы калькулятора из calc.py и база из out/.
 
-Запуск после пересборки базы: .venv/bin/python web/export_data.py
+Запуск после пересборки базы: .venv/bin/python export_web.py — пишет docs/data.json (в репозитории)
+и out/data.json (его публикует актуализация). Вызывается и из actualize.py.
 """
 import json
 import math
@@ -8,7 +9,7 @@ import sqlite3
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
 import pandas as pd  # noqa: E402
@@ -60,18 +61,15 @@ def constants():
 
 
 def main():
-    DOCS.mkdir(exist_ok=True)
-    params = pd.read_csv(OUT / "параметры.csv").set_index("параметр")["значение"]
     rates = pd.read_csv(OUT / "ставки.csv")[list(RATE_COLS)].rename(columns=RATE_COLS)
     with sqlite3.connect(OUT / "kz_auto_import.sqlite") as con:
         questions = pd.read_sql("select * from спорные", con)
         conditions = pd.read_sql("select * from условия", con)
         sources = pd.read_sql("select * from источники", con)
     data = {
-        "asOf": "2026-10-15",
+        "asOf": calc.AS_OF.isoformat(), "fxDate": calc.FX_DATE.isoformat(),
         "constants": constants(),
-        "fx": {"EUR": params["EUR_KZT_15.10.2026"], "USD": params["USD_KZT_15.10.2026"],
-               "CNY": params["CNY_KZT_15.10.2026"], "RUB": params["RUB_KZT_15.10.2026"], "KZT": 1},
+        "fx": calc.FX,
         "rates": records(rates),
         "questions": records(questions.rename(columns={"вопрос": "q", "неясность": "issue", "как_учтено": "how"})),
         "conditions": records(conditions.rename(columns={
@@ -82,9 +80,12 @@ def main():
         "glossary": {"dt_vs_ptd": glossary.DT_VS_PTD, "terms": glossary.TERMS},
         "sources": records(sources.rename(columns={"правовой_акт": "act", "записей": "n", "блоки": "blocks"})),
     }
-    out = DOCS / "data.json"
-    out.write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")))
-    print(out, f"{out.stat().st_size / 1024:.0f} КБ")
+    text = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
+    targets = [OUT / "data.json"] + ([DOCS / "data.json"] if DOCS.is_dir() else [])
+    for out in targets:
+        out.write_text(text)
+        print(out, f"{out.stat().st_size / 1024:.0f} КБ")
+    return OUT / "data.json"
 
 
 if __name__ == "__main__":
