@@ -4,8 +4,10 @@ import streamlit as st
 
 import calc
 from ui import charts
-from ui.common import (ROUTE_COLOR, ROUTES, RU_ROUTES, SLOTS, load_rates, load_scenarios, long_components,
-                       money, pct)
+from ui.common import (ROUTE_COLOR, ROUTES, RU_ROUTES, SLOTS, keep, load_rates, load_scenarios, long_components,
+                       money, pct, remember)
+
+KEYS = {"an_engine": "Бензин 2.0 л", "an_price": 15000, "an_age": 4, "an_ru": False}
 
 ROUTE_ORDER = [r[3] for r in ROUTES]
 BASE_ROUTES = [r for r in ROUTE_ORDER if r not in RU_ROUTES]
@@ -13,13 +15,14 @@ BASE_ROUTES = [r for r in ROUTE_ORDER if r not in RU_ROUTES]
 
 def _controls(df):
     engines = df.drop_duplicates("двигатель")["двигатель"].tolist()
-    c1, c2, c3 = st.columns(3)
-    eng = c1.selectbox("Двигатель", engines, index=engines.index("Бензин 2.0 л"), key="an_engine")
     prices = sorted(df["стоимость_eur"].unique())
-    price = c2.select_slider("Стоимость, €", prices, value=15000, key="an_price",
-                             format_func=lambda v: money(v))
     ages = sorted(df["возраст"].unique())
-    age = c3.select_slider("Возраст, лет", ages, value=4, key="an_age")
+    keep(KEYS, valid={"an_engine": engines, "an_price": prices, "an_age": ages})
+    c1, c2, c3 = st.columns(3)
+    eng = c1.selectbox("Двигатель", engines, key="an_engine")
+    price = c2.select_slider("Стоимость, €", prices, key="an_price",
+                             format_func=lambda v: money(v))
+    age = c3.select_slider("Возраст, лет", ages, key="an_age")
     return eng, price, age
 
 
@@ -55,7 +58,7 @@ def render():
     for line in _findings(df, eng, price, age):
         st.markdown("- " + line)
 
-    show_ru = st.toggle("Показывать Россию и Беларусь", value=False, key="an_ru",
+    show_ru = st.toggle("Показывать Россию и Беларусь", key="an_ru",
                         help="Утильсбор по коэффициенту 2 в десятки раз больше остальных платежей и сжимает шкалу.")
     routes = ROUTE_ORDER if show_ru else BASE_ROUTES
     colors = [ROUTE_COLOR[r] for r in routes]
@@ -145,3 +148,4 @@ def render():
                  height=36 * (len(piv) + 1) + 4)
     st.caption("А — текст нормативного акта, Б — разъяснение госоргана, В — СМИ, Г — рыночная оценка, "
                "Д — спорно или не подтверждено. Подробности — в разделах «База ставок» и «Спорные вопросы».")
+    remember(KEYS)

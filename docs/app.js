@@ -8,7 +8,7 @@
   const pct = (n, d = 0) => n.toFixed(d).replace(".", ",") + "%";
   const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
-  const data = await (await fetch("data.json?v=1.4.0")).json();
+  const data = await (await fetch("data.json?v=1.5.0")).json();
   const K = KZCalc.make(data.constants);
   const C = data.constants;
   const now = new Date(), TODAY = { y: now.getFullYear(), m: now.getMonth() + 1 };
@@ -185,6 +185,25 @@
     set("year", q.get("y")); set("month", q.get("m")); $("#market").checked = q.get("mk") === "1";
   }
 
+  // Последний расчёт хранится в браузере: после перезагрузки страницы поля заполнены теми же значениями.
+  // Ссылка на расчёт (#calc?…) важнее сохранённого.
+  const STORE = "kzai.calc.v1", FIELDS = ["price", "deliv", "cur", "fuel", "cc", "year", "month"];
+  if (!hashQuery) {
+    try {
+      const s = JSON.parse(localStorage.getItem(STORE) || "null");
+      if (s) {
+        FIELDS.forEach((id) => { if (s[id] != null && [...($("#" + id).options || [{ value: s[id] }])].some((o) => o.value == s[id])) $("#" + id).value = s[id]; });
+        $("#market").checked = !!s.market; $("#show-ru").checked = !!s.showRu;
+      }
+    } catch { /* хранилище недоступно — начнём с исходных значений */ }
+  }
+  function saveCar() {
+    try {
+      localStorage.setItem(STORE, JSON.stringify({ ...Object.fromEntries(FIELDS.map((id) => [id, $("#" + id).value])),
+        market: $("#market").checked, showRu: $("#show-ru").checked }));
+    } catch { /* приватный режим и т. п. */ }
+  }
+
   function readCar() {
     const price = Math.max(+$("#price").value || 0, 0), deliv = Math.max(+$("#deliv").value || 0, 0);
     const cur = $("#cur").value, fuel = $("#fuel").value;
@@ -192,7 +211,7 @@
     $("#cc").disabled = ev;
     const cc = ev ? 0 : Math.max(Math.round(+$("#cc").value || 0), 0);
     const y = +yearSel.value, m = +monthSel.value;
-    const months = (TODAY.y - y) * 12 + (TODAY.m - m);
+    const months = (TODAY.y - y) * 12 + (TODAY.m - m) - (now.getDate() < 15 ? 1 : 0);   // как в приложении
     const toEur = (x) => (x * data.fx[cur]) / data.fx.EUR;
     return { priceEur: toEur(price), delivEur: toEur(deliv), price, deliv, cur, fuel, cc, age: Math.max(Math.floor(months / 12), 0), ageReg: TODAY.y - y, y, m };
   }
@@ -208,6 +227,9 @@
     $("#best-total").innerHTML = `${fmt(best[key])}<small>тг</small>`;
     $("#best-share").textContent = pct((100 * best[key]) / best.value_kzt);
     const dt = rows.find((x) => x.id === "dt");
+    const tp = KZTips.forCar(K, C, { price_eur: car.priceEur, deliv_eur: car.delivEur, fuel: car.fuel, cc: car.cc, age: car.age,
+      age_reg: car.ageReg, year: car.y, month: car.m, today_year: TODAY.y, today_month: TODAY.m });
+    renderTips(tp.general);
     $("#ages").textContent = `Цена покупки ${fmt(best.value_kzt)} тг (${fmt(car.priceEur)} €), таможенная стоимость по ДТ с доставкой — ${fmt(dt.customs_value)} тг. Для таможни машине ${car.age} полных лет, для сбора за регистрацию — ${car.ageReg} (считается «включая год выпуска»).`;
 
     const showRu = $("#show-ru").checked;
@@ -215,24 +237,38 @@
     stackedBars($("#cmp-chart"), plot.map((r) => ({ label: r.label, total: r[key], parts: partsOf(r, market) })), $("#cmp-legend"));
     $("#ru-note").textContent = showRu ? "" : "Россия/Беларусь: " + rows.filter(isRu).map((r) => `${r.label.split(" · ")[1]} — ${mln(r[key])} тг`).join("; ") + ". Утильсбор по коэффициенту 2 сжимает остальные бары, поэтому скрыт.";
 
-    const head = ["Маршрут", "Итого, тг", "От стоимости", "Пошлина / ЕТП", "НДС", "Акциз", "Утильсбор", "Сбор за регистрацию", "Налог на транспорт в год", "Ограничения"];
-    $("#cmp-table").innerHTML = `<thead><tr>${head.map((h, i) => `<th class="${i && i < 9 ? "num" : ""}">${h}</th>`).join("")}</tr></thead><tbody>` +
-      rows.map((r) => `<tr class="${r.blocked ? "blocked" : ""} ${r.id === best.id ? "is-best" : ""}"><td>${esc(r.label)}</td><td class="num"><b>${fmt(r[key])}</b></td><td class="num">${pct((100 * r[key]) / r.value_kzt)}</td><td class="num">${fmt(r.duty + r.etp)}</td><td class="num">${fmt(r.vat)}</td><td class="num">${fmt(r.excise)}</td><td class="num">${fmt(r.util)}</td><td class="num">${fmt(r.reg_fee)}</td><td class="num">${fmt(r.tax_year)}</td><td>${esc(r.flags.map((f) => f.split(" (")[0].split(":")[0]).join("; "))}</td></tr>`).join("") + "</tbody>";
+    const head = ["Маршрут", "Итого, тг", "От стоимости", "Как сэкономить", "Пошлина / ЕТП", "НДС", "Акциз", "Утильсбор", "Сбор за регистрацию", "Налог на транспорт в год", "Ограничения"];
+    $("#cmp-table").innerHTML = `<thead><tr>${head.map((h, i) => `<th class="${i && i !== 3 && i < 10 ? "num" : ""}">${h}</th>`).join("")}</tr></thead><tbody>` +
+      rows.map((r) => `<tr class="${r.blocked ? "blocked" : ""} ${r.id === best.id ? "is-best" : ""}"><td>${esc(r.label)}</td><td class="num"><b>${fmt(r[key])}</b></td><td class="num">${pct((100 * r[key]) / r.value_kzt)}</td><td class="tip-cell">${esc(tp.routes[r.id] || "")}</td><td class="num">${fmt(r.duty + r.etp)}</td><td class="num">${fmt(r.vat)}</td><td class="num">${fmt(r.excise)}</td><td class="num">${fmt(r.util)}</td><td class="num">${fmt(r.reg_fee)}</td><td class="num">${fmt(r.tax_year)}</td><td>${esc(r.flags.map((f) => f.split(" (")[0].split(":")[0]).join("; "))}</td></tr>`).join("") + "</tbody>";
 
     $("#route-seg").innerHTML = rows.map((r) => `<button type="button" data-route="${r.id}" aria-pressed="${r.id === selectedRoute}">${esc(r.label)}</button>`).join("");
     const r = rows.find((x) => x.id === selectedRoute);
     $("#route-who").textContent = r.who + (r.duty_basis !== "—" ? ` · ставка пошлины: ${r.duty_basis}` : "");
-    const lines = COMPONENTS.filter(([k]) => r[k] > 0).map(([k, label, norm]) => `<tr><td>${label}</td><td class="num">${fmt(r[k])}</td><td>${esc(norm)}</td></tr>`);
-    lines.push(`<tr class="total"><td>Итого обязательные</td><td class="num">${fmt(r.total)}</td><td></td></tr>`);
-    if (market && r.delivery) lines.push(`<tr><td>Доставка и страховка до границы ЕАЭС</td><td class="num">${fmt(r.delivery)}</td><td>ваша сумма; по ДТ входит в таможенную стоимость (ТК ЕАЭС ст. 40)</td></tr>`);
-    if (market) lines.push(`<tr><td>Рыночные расходы (оценка)</td><td class="num">${fmt(r.market)}</td><td>ОГПО, брокер, СВХ, СБКТС, ЭПТС — рыночные диапазоны</td></tr>`);
-    $("#route-table").innerHTML = `<thead><tr><th>Платёж</th><th class="num">Сумма, тг</th><th>Норма</th></tr></thead><tbody>${lines.join("")}</tbody>`;
+    const hint = tp.lines[r.id] || {};
+    const lines = COMPONENTS.filter(([k]) => r[k] > 0).map(([k, label, norm]) => `<tr><td>${label}</td><td class="num">${fmt(r[k])}</td><td>${esc(norm)}</td><td class="tip-cell">${esc(hint[PY_KEY[k]] || "")}</td></tr>`);
+    lines.push(`<tr class="total"><td>Итого обязательные</td><td class="num">${fmt(r.total)}</td><td></td><td class="tip-cell">${esc(tp.routes[r.id] || "")}</td></tr>`);
+    if (market && r.delivery) lines.push(`<tr><td>Доставка и страховка до границы ЕАЭС</td><td class="num">${fmt(r.delivery)}</td><td>ваша сумма; по ДТ входит в таможенную стоимость (ТК ЕАЭС ст. 40)</td><td></td></tr>`);
+    if (market) lines.push(`<tr><td>Рыночные расходы (оценка)</td><td class="num">${fmt(r.market)}</td><td>ОГПО, брокер, СВХ, СБКТС, ЭПТС — рыночные диапазоны</td><td></td></tr>`);
+    $("#route-table").innerHTML = `<thead><tr><th>Платёж</th><th class="num">Сумма, тг</th><th>Норма</th><th>Как сэкономить</th></tr></thead><tbody>${lines.join("")}</tbody>`;
     $("#route-flags").innerHTML = r.flags.map((f) => `<div class="flag">${esc(f)}</div>`).join("");
     $("#route-tax").textContent = `После регистрации — налог на транспорт около ${fmt(r.tax_year)} тг в год (НК ст. 565).`;
   }
+  const PY_KEY = { duty: "пошлина", etp: "ЕТП_СТП", customs_fee: "таможенный_сбор", excise: "акциз", vat: "НДС",
+    abroad: "за_рубежом", util: "утильсбор", reg_fee: "сбор_первичная_регистрация", docs: "СРТС_и_номера" };
+  const KIND = { "сейчас": ["✅", "можно сделать с этой машиной"], "выбор": ["🔁", "если выбирать машину или уточнить код"], "внимание": ["⚠️", "учесть"] };
+  function renderTips(items) {
+    const el = $("#tips-best");
+    el.hidden = !items.length;
+    if (!items.length) return;
+    const li = (t) => `<li><span class="tip-kind" title="${KIND[t.kind][1]}">${KIND[t.kind][0]}</span> ${esc(t.text)}</li>`;
+    el.innerHTML = `<div class="tips-title">Как сэкономить на этой машине</div><ul>${items.slice(0, 5).map(li).join("")}</ul>` +
+      (items.length > 5 ? `<details><summary>Ещё ${items.length - 5}</summary><ul>${items.slice(5).map(li).join("")}</ul></details>` : "") +
+      `<p class="note" style="margin:6px 0 0">✅ можно сделать с этой машиной · 🔁 если выбирать машину или уточнить код · ⚠️ учесть. Порядок — по размеру выгоды.</p>`;
+  }
+
   $("#route-seg").addEventListener("click", (e) => { const b = e.target.closest("button[data-route]"); if (b) { selectedRoute = b.dataset.route; renderCalc(); } });
-  $("#car").addEventListener("input", renderCalc);
-  $("#show-ru").addEventListener("change", renderCalc);
+  $("#car").addEventListener("input", () => { renderCalc(); saveCar(); });
+  $("#show-ru").addEventListener("change", () => { renderCalc(); saveCar(); });
   $("#share").addEventListener("click", async () => {
     const c = readCar();
     const q = new URLSearchParams({ p: c.price, d: c.deliv, c: c.cur, f: c.fuel, v: c.cc, y: c.y, m: c.m, mk: $("#market").checked ? 1 : 0 });

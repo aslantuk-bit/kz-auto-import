@@ -4,9 +4,16 @@ import streamlit as st
 
 import calc
 import glossary
+import tips
 from ui import charts
 from ui.common import (COMP_LABEL, COMP_NORM, COMPONENTS, FUEL_LABEL, ROUTES, RU_ROUTES, TODAY,
-                       as_of_line, fx_rates, long_components, money, pct)
+                       as_of_line, fx_rates, keep, long_components, money, pct, remember)
+
+YEARS = list(range(TODAY.year, 1994, -1))
+DEFAULTS = {"calc_price": 15000.0, "calc_cur": "EUR", "calc_deliv": 2000.0, "calc_fuel": "бензин",
+            "calc_vol": 2000, "calc_year": TODAY.year - 4, "calc_month": 6, "calc_market": False,
+            "calc_show_ru": False}
+KIND = {"сейчас": "✅", "выбор": "🔁", "внимание": "⚠️"}
 
 
 def _ages(year, month):
@@ -17,11 +24,13 @@ def _ages(year, month):
 
 def _inputs():
     fx = fx_rates()
+    keep(DEFAULTS, valid={"calc_cur": list(fx), "calc_fuel": list(FUEL_LABEL), "calc_year": YEARS,
+                          "calc_month": list(range(1, 13))})
     st.subheader("Машина")
     c1, c2 = st.columns([3, 2])
-    price = c1.number_input("Цена покупки", min_value=0.0, value=15000.0, step=500.0, format="%.0f", key="calc_price")
-    cur = c2.selectbox("Валюта", list(fx), index=0, key="calc_cur")
-    deliv = st.number_input("Доставка и страховка до границы ЕАЭС", min_value=0.0, value=2000.0, step=100.0,
+    price = c1.number_input("Цена покупки", min_value=0.0, step=500.0, format="%.0f", key="calc_price")
+    cur = c2.selectbox("Валюта", list(fx), key="calc_cur")
+    deliv = st.number_input("Доставка и страховка до границы ЕАЭС", min_value=0.0, step=100.0,
                             format="%.0f", key="calc_deliv",
                             help="В той же валюте, что и цена. Ориентиры: автовоз из Китая $2,5–4,5 тыс., "
                                  "из США $3,6–4,6 тыс. Дорога по ЕАЭС не входит, если выделена в документах. "
@@ -31,12 +40,11 @@ def _inputs():
                f"и Беларуси цена — цена на их рынке. Курсы НБРК на {calc.FX_DATE:%d.%m.%Y}.")
     fuel = st.selectbox("Двигатель", list(FUEL_LABEL), format_func=FUEL_LABEL.get, key="calc_fuel")
     ev = fuel == "электро"
-    vol = st.number_input("Объём двигателя, см³", min_value=0, max_value=9000, value=2000,
-                          step=100, disabled=ev, key="calc_vol")
+    vol = st.number_input("Объём двигателя, см³", min_value=0, max_value=9000, step=100, disabled=ev, key="calc_vol")
     c3, c4 = st.columns(2)
-    year = c3.selectbox("Год выпуска", list(range(TODAY.year, 1994, -1)), index=4, key="calc_year")
-    month = c4.selectbox("Месяц выпуска", list(range(1, 13)), index=5, key="calc_month")
-    market = st.toggle("Доставка и рыночные расходы", value=False, key="calc_market",
+    year = c3.selectbox("Год выпуска", YEARS, key="calc_year")
+    month = c4.selectbox("Месяц выпуска", list(range(1, 13)), key="calc_month")
+    market = st.toggle("Доставка и рыночные расходы", key="calc_market",
                        help="Сама доставка, ОГПО, брокер, СВХ, СБКТС, ЭПТС — по серединам рыночных диапазонов, "
                             "не госплатежи.")
     price_eur = price * fx[cur] / fx["EUR"]
@@ -63,6 +71,7 @@ def render():
     blocked = df["примечания"].str.contains(calc.BLOCKING)
     ok = df[~blocked]
     best = (ok if len(ok) else df).loc[(ok if len(ok) else df)[total_col].idxmin()]
+    tp = tips.for_car(price_eur, deliv_eur, fuel, vol, age, age_reg, year, month, TODAY.year, TODAY.month)
 
     with right:
         st.subheader("Итог")
@@ -76,7 +85,8 @@ def render():
                    f"таможенная стоимость по ДТ с доставкой — {money(customs)} тг. "
                    f"Для таможни машине {age} полных лет, для сбора за регистрацию — {age_reg} "
                    "(считается «включая год выпуска»).")
-        show_ru = st.toggle("Показать Россию и Беларусь на графике", value=False, key="calc_show_ru",
+        _tips_block(tp["general"])
+        show_ru = st.toggle("Показать Россию и Беларусь на графике", key="calc_show_ru",
                             help="Утильсбор по коэффициенту 2 в десятки раз больше остальных платежей "
                                  "и сжимает остальные бары.")
         plot = df if show_ru else df[~df["маршрут"].isin(RU_ROUTES)]
@@ -94,6 +104,7 @@ def render():
         "Маршрут": df["маршрут"],
         "Итого, тг": df[total_col].map(money),
         "От стоимости": (100 * df[total_col] / df["стоимость_кзт"]).map(pct),
+        "Как сэкономить": df["id"].map(lambda i: tp["routes"].get(i, "")),
         "Пошлина / ЕТП": (df["пошлина"] + df["ЕТП_СТП"]).map(money),
         "НДС": df["НДС"].map(money),
         "Акциз": df["акциз"].map(money),
@@ -102,23 +113,26 @@ def render():
         "Налог на транспорт в год": df["налог_на_транспорт_год"].map(money),
         "Ограничения": df["примечания"],
     })
-    st.dataframe(table, hide_index=True, use_container_width=True)
+    st.dataframe(table, hide_index=True, use_container_width=True,
+                 column_config={"Как сэкономить": st.column_config.TextColumn(width="large")})
 
     st.subheader("Разбивка по маршруту")
     tabs = st.tabs([r[3] for r in ROUTES])
     for tab, (_, r) in zip(tabs, df.iterrows()):
         with tab:
             st.caption(r["как"] + (f" · ставка пошлины: {r['ставка_пошлины']}" if r["ставка_пошлины"] != "—" else ""))
-            lines = [{"Платёж": COMP_LABEL[k], "Сумма, тг": money(r[k]), "Норма": COMP_NORM[k]}
-                     for k, _, _ in COMPONENTS if r[k] > 0]
-            lines.append({"Платёж": "Итого обязательные", "Сумма, тг": money(r["итого_обязательные"]), "Норма": ""})
+            hint = tp["lines"].get(r["id"], {})
+            lines = [{"Платёж": COMP_LABEL[k], "Сумма, тг": money(r[k]), "Норма": COMP_NORM[k],
+                      "Как сэкономить": hint.get(k, "")} for k, _, _ in COMPONENTS if r[k] > 0]
+            lines.append({"Платёж": "Итого обязательные", "Сумма, тг": money(r["итого_обязательные"]), "Норма": "",
+                          "Как сэкономить": tp["routes"].get(r["id"], "")})
             if with_market:
                 if r["доставка_кзт"]:
                     lines.append({"Платёж": "Доставка и страховка до границы ЕАЭС", "Сумма, тг": money(r["доставка_кзт"]),
                                   "Норма": "ваша сумма; по ДТ входит в таможенную стоимость (ТК ЕАЭС ст. 40)"})
                 lines.append({"Платёж": "Рыночные расходы (оценка)", "Сумма, тг": money(r["рыночные_оценка"]),
                               "Норма": "ОГПО, брокер, СВХ, СБКТС, ЭПТС — рыночные диапазоны"})
-            st.dataframe(pd.DataFrame(lines), hide_index=True, use_container_width=True)
+            _md_table(pd.DataFrame(lines).fillna(""))
             if r["примечания"]:
                 for n in r["примечания"].split("; "):
                     st.warning(n)
@@ -126,6 +140,29 @@ def render():
                        "(НК ст. 565).")
 
     _glossary()
+    remember(DEFAULTS)
+
+
+def _md_table(df):
+    """Таблица с переносом длинных строк (st.dataframe обрезает текст)."""
+    esc = lambda v: str(v).replace("|", "\\|")  # noqa: E731
+    head = "| " + " | ".join(df.columns) + " |\n|" + "|".join("---:" if c == "Сумма, тг" else "---" for c in df.columns) + "|"
+    st.markdown(head + "\n" + "\n".join("| " + " | ".join(esc(v) for v in row) + " |" for row in df.values))
+
+
+def _tips_block(items):
+    if not items:
+        return
+    with st.container(border=True):
+        st.markdown("**Как сэкономить на этой машине**")
+        def line(t):
+            return f"{KIND[t['kind']]} {t['text']}"
+        st.markdown("\n".join(f"- {line(t)}" for t in items[:5]))
+        if len(items) > 5:
+            with st.expander(f"Ещё {len(items) - 5}"):
+                st.markdown("\n".join(f"- {line(t)}" for t in items[5:]))
+        st.caption("✅ можно сделать с этой машиной · 🔁 если выбирать машину или уточнить код · ⚠️ учесть. "
+                   "Порядок — по размеру выгоды.")
 
 
 def _glossary():

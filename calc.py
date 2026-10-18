@@ -18,6 +18,7 @@
 Происхождение для утильсбора: «третьи» (коэффициент 1, включая АМ и КГ) или «РФ_РБ» (коэффициент 2).
 """
 import json
+import math
 from dataclasses import dataclass, asdict
 from datetime import date
 from itertools import product
@@ -306,7 +307,8 @@ def calc(c: Car) -> dict:
     if c.режим == "ПТД" and lux:
         flags.append("акциз 10% при ПТД — спорно")
     r["примечания"] = "; ".join(flags)
-    return {k: (round(v) if isinstance(v, float) else v) for k, v in r.items()}
+    # округление «половина вверх» — как Math.round в calc.js
+    return {k: (math.floor(v + 0.5) if isinstance(v, float) else v) for k, v in r.items()}
 
 
 SCENARIO_MODES = (("ДТ", "третьи"), ("ПТД", "третьи"), ("ЕАЭС_ЮЛ", "третьи"),

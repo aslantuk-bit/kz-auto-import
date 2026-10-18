@@ -39,4 +39,19 @@ for (const line of lines.slice(1)) {
   if ((r[col("ставка_пошлины")] || "—") !== js.duty_basis && bad++ < 10) console.log("основание", JSON.stringify(c));
 }
 console.log(`${lines.length - 1} сценариев, расхождений: ${bad}`);
-process.exit(bad ? 1 : 0);
+
+// Советы по экономии: docs/tips.js против tips.py (out/tips_parity.json — python tips.py)
+const tipsFile = root + "out/tips_parity.json";
+let badTips = 0;
+try {
+  const cases = JSON.parse(readFileSync(tipsFile, "utf8"));
+  const { forCar } = require(root + "docs/tips.js");
+  for (const c of cases) {
+    const js = JSON.stringify(forCar(K, data.constants, c.args)), pyOut = JSON.stringify(c.out);
+    if (js !== pyOut && badTips++ < 3) console.log("советы расходятся", JSON.stringify(c.args), "\n py:", pyOut.slice(0, 600), "\n js:", js.slice(0, 600));
+  }
+  console.log(`${cases.length} машин, советы расходятся: ${badTips}`);
+} catch (e) {
+  if (e.code === "ENOENT") console.log("советы не сверялись: нет out/tips_parity.json (python tips.py)"); else throw e;
+}
+process.exit(bad || badTips ? 1 : 0);

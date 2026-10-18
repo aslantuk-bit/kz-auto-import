@@ -187,6 +187,13 @@ details.q p { margin: 6px 0 0; color: var(--ink-2); }
   .gl-cmp td { border: 0; padding: 4px 12px; }
   .gl-cmp td[data-label]::before { content: attr(data-label) " — "; font-weight: 600; color: var(--ink); }
 }
+.tips { margin-top: 14px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+.tips-title { font-weight: 600; margin-bottom: 6px; }
+.tips ul { margin: 0; padding-left: 4px; list-style: none; display: grid; gap: 6px; }
+.tips li { line-height: 1.4; }
+.tips details summary { cursor: pointer; color: var(--accent); margin-top: 6px; }
+.tip-sum { white-space: nowrap; }
+td.tip-cell { min-width: 220px; color: var(--ink-2); font-size: 13px; }
 ol.steps { margin: 0; padding-left: 22px; display: grid; gap: 8px; }
 ol.toc { margin: 0; padding-left: 22px; columns: 2 260px; column-gap: 24px; }
 ol.toc li { margin: 2px 0; break-inside: avoid; }

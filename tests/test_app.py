@@ -25,6 +25,8 @@ def check(at, name):
 
 
 def test_calc():
+    from ui.common import STATE_FILE
+    STATE_FILE.unlink(missing_ok=True)
     at = check(page("ui.page_calc", "render"), "калькулятор")
     assert any("Дешевле всего" in m.value for m in at.markdown)
     at.selectbox(key="calc_fuel").set_value("электро")
@@ -37,6 +39,23 @@ def test_calc():
     at.toggle(key="calc_market").set_value(True)
     at.toggle(key="calc_show_ru").set_value(True)
     check(at, "калькулятор: старый 3,5 л, USD, рынок, РФ")
+
+
+def test_inputs_survive():
+    """Введённое в калькуляторе остаётся после ухода со страницы и в новом сеансе (state/inputs.json)."""
+    from ui.common import STATE_FILE
+    STATE_FILE.unlink(missing_ok=True)
+    at = check(page("ui.page_calc", "render"), "калькулятор: исходные значения")
+    at.number_input(key="calc_price").set_value(31000.0)
+    at.number_input(key="calc_vol").set_value(2400)
+    at.selectbox(key="calc_cur").set_value("USD")
+    at.run()
+    again = check(page("ui.page_calc", "render"), "калькулятор: новый сеанс")
+    assert again.number_input(key="calc_price").value == 31000.0
+    assert again.number_input(key="calc_vol").value == 2400
+    assert again.selectbox(key="calc_cur").value == "USD"
+    assert any("Как сэкономить на этой машине" in m.value for m in again.markdown)
+    STATE_FILE.unlink(missing_ok=True)
 
 
 def test_analytics():
@@ -66,6 +85,6 @@ def test_misc():
 
 
 if __name__ == "__main__":
-    for t in (test_calc, test_savings, test_analytics, test_rates, test_misc):
+    for t in (test_inputs_survive, test_calc, test_savings, test_analytics, test_rates, test_misc):
         t()
     print("все страницы отрисованы")

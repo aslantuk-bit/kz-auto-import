@@ -2,7 +2,7 @@
 import pandas as pd
 import streamlit as st
 
-from ui.common import load_params, load_rates, load_table, money
+from ui.common import keep, load_params, load_rates, load_table, money, remember
 
 RELIABILITY = {"А": "А — текст акта", "Б": "Б — разъяснение госоргана", "В": "В — СМИ",
                "Г": "Г — рыночная оценка", "Д": "Д — спорно"}
@@ -15,14 +15,19 @@ LABELS = {"вид_платежа": "платёж", "категория_ТС": "�
           "сумма_тг_2026": "тг (2026)", "правовой_акт": "акт"}
 
 
+KEYS = {"rt_blocks": [], "rt_rel": [], "rt_current": True, "rt_text": ""}
+
+
 def _filter(df):
+    keep(KEYS)
     c1, c2, c3 = st.columns([2, 1.3, 1])
     blocks = c1.multiselect("Блок", sorted(df["блок"].unique()), placeholder="все блоки", key="rt_blocks")
     rel = c2.multiselect("Достоверность", list(RELIABILITY), format_func=RELIABILITY.get,
                          placeholder="любая", key="rt_rel")
-    current = c3.toggle("Только действующие", value=True, key="rt_current")
+    current = c3.toggle("Только действующие", key="rt_current")
     text = st.text_input("Поиск", placeholder="например: электромобиль, 8703 23, ст. 615, Решение № 59",
                          key="rt_text")
+    remember(KEYS)
     if blocks:
         df = df[df["блок"].isin(blocks)]
     if rel:

@@ -1,4 +1,5 @@
 """Общее для страниц: данные, подписи, форматирование, палитра."""
+import json
 import sqlite3
 from datetime import date
 from pathlib import Path
@@ -112,6 +113,45 @@ def long_components(df, id_col):
     m["платёж"] = m["ключ"].map(COMP_LABEL)
     m["порядок"] = m["ключ"].map({k: i for i, k in enumerate(keys)})
     return m[m["сумма"] > 0]
+
+
+STATE_FILE = ROOT / "state" / "inputs.json"   # последние введённые данные — переживают перезапуск
+
+
+def _load_state():
+    try:
+        return json.loads(STATE_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def keep(defaults, valid=None):
+    """Значения виджетов не пропадают при переходе между разделами и после перезапуска.
+
+    Streamlit удаляет состояние виджетов страницы, которую не показывают; копия хранится в
+    session_state["_saved"] и в state/inputs.json. valid — {ключ: допустимые значения}."""
+    ss = st.session_state
+    saved = ss.setdefault("_saved", _load_state())
+    for k, v in defaults.items():
+        if k not in ss:
+            x = saved.get(k, v)
+            ss[k] = x if (valid is None or k not in valid or x in valid[k]) else v
+
+
+def remember(keys):
+    ss = st.session_state
+    saved = ss.setdefault("_saved", {})
+    changed = False
+    for k in keys:
+        if k in ss and saved.get(k) != ss[k]:
+            saved[k] = ss[k]
+            changed = True
+    if changed:
+        try:
+            STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+            STATE_FILE.write_text(json.dumps(saved, ensure_ascii=False), encoding="utf-8")
+        except OSError:
+            pass   # не смогли сохранить на диск — в пределах сеанса значения всё равно сохранятся
 
 
 def note(text):
