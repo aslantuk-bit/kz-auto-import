@@ -29,6 +29,10 @@ plutil -replace LSUIElement -bool true "$PL"
 codesign --force --deep -s - "dist/$APP"
 du -sh "dist/$APP"
 if [[ "$1" == "--install" ]]; then
+  # старый сервер держит прежний код в памяти, а страницы читает с диска — после установки он падает на новых модулях
+  for pid in $(lsof -tnP -iTCP:8790 -sTCP:LISTEN 2>/dev/null); do
+    ps -o command= -p $pid | grep -q "$APP/Contents/MacOS/VvozAuto" && kill $pid && echo "остановлен старый сервер $pid"
+  done
   rm -rf "/Applications/$APP"
   cp -R "dist/$APP" /Applications/
   xattr -dr com.apple.quarantine "/Applications/$APP" 2>/dev/null || true
