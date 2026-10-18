@@ -53,7 +53,10 @@ FLAT = {"crawler": (0.075, 0.0), "combine": (0.05, None), "forklift": (0.05, Non
         "roller": (0.05, 0.0), "dumper": (0.05, 0.0)}
 
 ROUTES = (("dt", "ДТ", "третьи"), ("ptd", "ПТД", "третьи"), ("ru_ul", "ЕАЭС_ЮЛ", "РФ_РБ"), ("ru_fl", "ЕАЭС_ФЛ", "РФ_РБ"))
-MARKET = {"брокер": 120_000, "СВХ": 60_000, "СБКТС": 250_000, "сертификат": 200_000}   # рыночные оценки, «Г»
+# Рыночные оценки по опубликованным прайсам (блок J, 18.10.2026): брокер и СВХ — «Г»; СБКТС на грузовик и
+# сертификат ТР ТС 010/031 на технику — «Д» (цен в РК не найдено, ориентир по РФ)
+MARKET = {"брокер": 100_000, "СВХ": 45_000, "СВХ_техника": 60_000, "СВХ_мото": 30_000, "СБКТС": 250_000,
+          "СБКТС_мото": 120_000, "ЭПТС": 30_000, "сертификат": 300_000}
 OGPO = {"N1": 2.09, "N": 3.98, "moto": 1.0}   # коэффициент к базовой премии 1,9 МРП (Закон об ОГПО, ст. 19)
 
 
@@ -215,9 +218,11 @@ def transport_tax(m: Machine):
 
 def _market(m: Machine):
     if m.kind in SELF:
-        return MARKET["брокер"] + MARKET["СВХ"] + MARKET["сертификат"]
-    ogpo = 1.9 * MRP * (OGPO["moto"] if m.kind == "moto" else OGPO["N1"] if m.mass <= 3.5 else OGPO["N"])
-    return MARKET["брокер"] + MARKET["СВХ"] + MARKET["СБКТС"] + ogpo
+        return MARKET["брокер"] + MARKET["СВХ_техника"] + MARKET["сертификат"]
+    if m.kind == "moto":
+        return MARKET["брокер"] + MARKET["СВХ_мото"] + MARKET["СБКТС_мото"] + MARKET["ЭПТС"] + 1.9 * MRP * OGPO["moto"]
+    ogpo = 1.9 * MRP * (OGPO["N1"] if m.mass <= 3.5 else OGPO["N"])
+    return MARKET["брокер"] + MARKET["СВХ"] + MARKET["СБКТС"] + MARKET["ЭПТС"] + ogpo
 
 
 def calc_machine(m: Machine) -> dict:

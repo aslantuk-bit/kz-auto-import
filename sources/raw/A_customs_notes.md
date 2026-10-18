@@ -79,3 +79,8 @@
 - Льгота 2026 для BY/AM/KG: https://kapital.kz/economic/143271/tarifnaya-lgota-na-vvoz-elektromobilej-v-strany-eaes-prodlena.html ; https://finratings.kz/news/9877-kvoty-sgoreli-lgoty-ne-prodlili-kazakhstantsam-pridiotsia-rastamazhivat-elektrokary-po-polnoi/
 - НДС при ввозе авто из РФ, ответ КГД от 04.10.2022: https://cdb.kz/sistema/pravovaya-baza/voznikaet-li-obyazatelstvo-po-uplate-nds-pri-importe-avtomobilya-iz-rf-na-territoriyu-rk/
 - Вторичные обзоры 2026 (сверены с перечнем № 59): https://kolesa.kz/content/news/rastamozhka-avto-v-kazahstane-v-2026-godu/ ; https://finratings.kz/news/11036-rastamozhka-avto-v-kazakhstane-v-2026-godu-skolko-stoit-oformlenie-importnoi-mashiny/
+
+## 7. Сверка с adilet.zan.kz (18.10.2026)
+
+- **ПП № 171** — эталонный текст на adilet: последняя редакция — постановление № 631 от 02.08.2023; ставки совпадают с базой (ДТ и транзитная декларация 6 МРП, сопровождение 1–93 МРП, предварительное решение 9 МРП); строки для ПТД нет.
+- **Перечень № 59** — 317 строк по 8429, 8433, 8701–8705 (код + описание + ставка) совпали с зеркалом zakon.uchet.kz полностью (контрольные суммы по каждой группе равны). Сверка через браузер, т. к. adilet программно не открывается.

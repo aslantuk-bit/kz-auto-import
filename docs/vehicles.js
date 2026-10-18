@@ -35,7 +35,8 @@
   const FLAT = { crawler: [0.075, 0.0], combine: [0.05, null], forklift: [0.05, null], forklift_el: [0.0, null],
     loader: [0.05, 0.0], excavator: [0.05, 0.0], bulldozer: [0.05, 0.0], grader: [0.03, 0.0], roller: [0.05, 0.0], dumper: [0.05, 0.0] };
   const ROUTES = [["dt", "ДТ", "третьи"], ["ptd", "ПТД", "третьи"], ["ru_ul", "ЕАЭС_ЮЛ", "РФ_РБ"], ["ru_fl", "ЕАЭС_ФЛ", "РФ_РБ"]];
-  const MARKET = { "брокер": 120000, "СВХ": 60000, "СБКТС": 250000, "сертификат": 200000 };
+  const MARKET = { "брокер": 100000, "СВХ": 45000, "СВХ_техника": 60000, "СВХ_мото": 30000, "СБКТС": 250000,
+    "СБКТС_мото": 120000, "ЭПТС": 30000, "сертификат": 300000 };
   const OGPO = { N1: 2.09, N: 3.98, moto: 1.0 };
   const r0 = (x) => Math.floor(x + 0.5);
 
@@ -113,9 +114,10 @@
       return band(m.payload, [[1, 3], [1.5, 5], [5, 7], [null, 9]]) * MRP;
     }
     function market(m) {
-      if (SELF.has(m.kind)) return MARKET["брокер"] + MARKET["СВХ"] + MARKET["сертификат"];
-      const ogpo = 1.9 * MRP * (m.kind === "moto" ? OGPO.moto : m.mass <= 3.5 ? OGPO.N1 : OGPO.N);
-      return MARKET["брокер"] + MARKET["СВХ"] + MARKET["СБКТС"] + ogpo;
+      if (SELF.has(m.kind)) return MARKET["брокер"] + MARKET["СВХ_техника"] + MARKET["сертификат"];
+      if (m.kind === "moto") return MARKET["брокер"] + MARKET["СВХ_мото"] + MARKET["СБКТС_мото"] + MARKET["ЭПТС"] + 1.9 * MRP * OGPO.moto;
+      const ogpo = 1.9 * MRP * (m.mass <= 3.5 ? OGPO.N1 : OGPO.N);
+      return MARKET["брокер"] + MARKET["СВХ"] + MARKET["СБКТС"] + MARKET["ЭПТС"] + ogpo;
     }
 
     function calcMachine(m) {
