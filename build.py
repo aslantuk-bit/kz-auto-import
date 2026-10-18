@@ -103,8 +103,8 @@ def base_row(rec, src, i):
 PTD_RANGE = re.compile(r"стоимость авто:\s*(?:>\s*([\d\s]+?)\s*)?(?:≤\s*([\d\s]+?)\s*)?EUR")
 
 
-def map_a(rec, i):
-    row = base_row(rec, "A_customs.json", i)
+def map_a(rec, i, fname="A_customs.json"):
+    row = base_row(rec, fname, i)
     vid = (rec.get("вид_платежа") or "").lower()
     cat = rec.get("категория_ТС") or ""
     subj = rec.get("субъект") or ""
@@ -146,8 +146,8 @@ def map_a(rec, i):
 
 
 # ---------- B: налоги и сборы по НК ----------
-def map_b(rec, i):
-    row = base_row(rec, "B_taxes.json", i)
+def map_b(rec, i, fname="B_taxes.json"):
+    row = base_row(rec, fname, i)
     vid = (rec.get("вид_платежа") or "").lower()
     if vid.startswith(("мрп", "мзп", "официальный курс")):
         return None  # уходит в параметры
@@ -248,8 +248,13 @@ def map_d(rec, i):
 def build():
     OUT.mkdir(exist_ok=True)
     rows = []
+    # H — таможня прочей техники (формат A), I — сторона РК для прочей техники (формат B)
     for fname, mapper in (("A_customs.json", map_a), ("B_taxes.json", map_b),
-                          ("C_util.json", map_c), ("D_registration.json", map_d)):
+                          ("C_util.json", map_c), ("D_registration.json", map_d),
+                          ("H_customs_other.json", lambda r, i: map_a(r, i, "H_customs_other.json")),
+                          ("I_kz_other.json", lambda r, i: map_b(r, i, "I_kz_other.json"))):
+        if not (RAW / fname).exists():
+            continue
         for i, rec in enumerate(json.loads((RAW / fname).read_text())):
             r = mapper(rec, i)
             if r:

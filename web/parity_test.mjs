@@ -54,4 +54,19 @@ try {
 } catch (e) {
   if (e.code === "ENOENT") console.log("советы не сверялись: нет out/tips_parity.json (python tips.py)"); else throw e;
 }
-process.exit(bad || badTips ? 1 : 0);
+// Прочая техника: docs/vehicles.js против vehicles.py (out/vehicles_parity.json — python vehicles.py)
+let badVeh = 0;
+try {
+  const cases = JSON.parse(readFileSync(root + "out/vehicles_parity.json", "utf8"));
+  const V = require(root + "docs/vehicles.js").make(data.constants);
+  const sorted = (o) => JSON.stringify(Object.keys(o).sort().map((k) => [k, o[k]]));
+  for (const c of cases) {
+    const js = V.calcMachine(c.in);
+    if (JSON.stringify(V.tips(c.in, 2026)) !== JSON.stringify(c.tips) && badVeh++ < 3) console.log("советы техники расходятся", JSON.stringify(c.in), JSON.stringify(c.tips).slice(0, 300), JSON.stringify(V.tips(c.in, 2026)).slice(0, 300));
+    if (sorted(js) !== sorted(c.out) && badVeh++ < 3) console.log("техника расходится", JSON.stringify(c.in), "\n py:", sorted(c.out).slice(0, 500), "\n js:", sorted(js).slice(0, 500));
+  }
+  console.log(`${cases.length} расчётов прочей техники, расхождений: ${badVeh}`);
+} catch (e) {
+  if (e.code === "ENOENT") console.log("прочая техника не сверялась: нет out/vehicles_parity.json (python vehicles.py)"); else throw e;
+}
+process.exit(bad || badTips || badVeh ? 1 : 0);

@@ -4,6 +4,7 @@ import streamlit as st
 
 import calc
 import glossary
+import kolesa
 import tips
 from ui import charts
 from ui.common import (COMP_LABEL, COMP_NORM, COMPONENTS, FUEL_LABEL, ROUTES, RU_ROUTES, TODAY,
@@ -12,7 +13,7 @@ from ui.common import (COMP_LABEL, COMP_NORM, COMPONENTS, FUEL_LABEL, ROUTES, RU
 YEARS = list(range(TODAY.year, 1994, -1))
 DEFAULTS = {"calc_price": 15000.0, "calc_cur": "EUR", "calc_deliv": 2000.0, "calc_fuel": "бензин",
             "calc_vol": 2000, "calc_year": TODAY.year - 4, "calc_month": 6, "calc_market": False,
-            "calc_show_ru": False}
+            "calc_show_ru": False, "calc_model": ""}
 KIND = {"сейчас": "✅", "выбор": "🔁", "внимание": "⚠️"}
 
 
@@ -38,6 +39,11 @@ def _inputs():
     st.caption("Цена — по договору в третьей стране, без доставки. По ДТ (в РК или в Кыргызстане) доставка входит "
                "в таможенную стоимость и увеличивает пошлину и НДС; по ПТД база — только цена покупки. Для России "
                f"и Беларуси цена — цена на их рынке. Курсы НБРК на {calc.FX_DATE:%d.%m.%Y}.")
+    km = kolesa.models()
+    names = dict(km)
+    st.selectbox("Модель — для сравнения с ценами Kolesa", [""] + [k for k, _ in km], key="calc_model",
+                 format_func=lambda k: names.get(k, "не выбрана"),
+                 help="Необязательно. Покажет, сколько такие машины того же года стоят в объявлениях Kolesa.kz.")
     fuel = st.selectbox("Двигатель", list(FUEL_LABEL), format_func=FUEL_LABEL.get, key="calc_fuel")
     ev = fuel == "электро"
     vol = st.number_input("Объём двигателя, см³", min_value=0, max_value=9000, step=100, disabled=ev, key="calc_vol")
@@ -86,6 +92,7 @@ def render():
                    f"Для таможни машине {age} полных лет, для сбора за регистрацию — {age_reg} "
                    "(считается «включая год выпуска»).")
         _tips_block(tp["general"])
+        _kolesa_block(st.session_state.get("calc_model"), year, best)
         show_ru = st.toggle("Показать Россию и Беларусь на графике", key="calc_show_ru",
                             help="Утильсбор по коэффициенту 2 в десятки раз больше остальных платежей "
                                  "и сжимает остальные бары.")
@@ -148,6 +155,54 @@ def _md_table(df):
     esc = lambda v: str(v).replace("|", "\\|")  # noqa: E731
     head = "| " + " | ".join(df.columns) + " |\n|" + "|".join("---:" if c == "Сумма, тг" else "---" for c in df.columns) + "|"
     st.markdown(head + "\n" + "\n".join("| " + " | ".join(esc(v) for v in row) + " |" for row in df.values))
+
+
+def _kolesa_any(year):
+    """Любая модель: один запрос к Kolesa из приложения (Kolesa может не ответить программе)."""
+    with st.expander("Цена на Kolesa для другой модели"):
+        st.caption("Адрес модели — из ссылки на Kolesa: kolesa.kz/cars/**toyota/alphard**/ → toyota/alphard. "
+                   "Один запрос; если Kolesa не ответит программе, откройте выдачу по ссылке.")
+        slug = st.text_input("Модель на Kolesa", placeholder="toyota/alphard", key="calc_kolesa_any").strip().strip("/")
+        if slug and st.button(f"Узнать цену {year} года", key="calc_kolesa_go"):
+            try:
+                r = kolesa.fetch_live(slug, year)
+                if r["n"] < kolesa.MIN_ADS:
+                    st.info(f"Объявлений {year} года мало ({r['n']}). [Выдача]({kolesa.search_url(slug, year)})")
+                else:
+                    st.success(f"{slug} {year}: медиана {money(r['med'])} тг, разброс {money(r['p25'])}–"
+                               f"{money(r['p75'])} тг по {r['n']} объявлениям из {r['found']}. Модель добавлена в "
+                               "список сравнения.")
+                    st.cache_data.clear()
+            except RuntimeError as e:
+                st.warning(f"{e}: [выдача на Kolesa]({kolesa.search_url(slug, year)})")
+
+
+def _kolesa_block(slug, year, best):
+    if not slug:
+        _kolesa_any(year)
+        return
+    landed = best["стоимость_кзт"] + best["итого_с_рыночными"]
+    c = kolesa.compare(slug, year, landed)
+    with st.container(border=True):
+        st.markdown(f"**Ввезти самому или купить в Казахстане** — {kolesa.NAMES.get(slug, slug)} {year} года")
+        if c is None:
+            st.caption(f"На Kolesa мало объявлений этого года — сравнить не с чем. [Открыть выдачу]({kolesa.search_url(slug, year)})")
+            return
+        a, b, d = st.columns(3)
+        a.metric("Ввоз под ключ", money(landed, "млн") + " тг",
+                 help="Цена покупки, доставка, все платежи и рыночные расходы по самому дешёвому маршруту")
+        b.metric("Kolesa, медиана", money(c["med"], "млн") + " тг",
+                 help=f"Половина объявлений дешевле, половина дороже; разброс {money(c['p25'], 'млн')}–"
+                      f"{money(c['p75'], 'млн')} тг")
+        d.metric("Ввоз выгоднее" if c["diff"] > 0 else "Купить здесь дешевле", money(abs(c["diff"]), "млн") + " тг")
+        same = []
+        if c.get("v"):
+            same.append(f"обычно {c['v']} л")
+        if c.get("f"):
+            same.append(c["f"])
+        st.caption(f"По {c['n']} объявлениям из {c['found']} ({', '.join(same)}), Kolesa.kz на "
+                   f"{kolesa.load().get('date', '')[:10]}. Цены объявлений — цены продавцов, торг обычно 5–10%; "
+                   f"машины в объявлениях уже на учёте в РК. [Объявления на Kolesa]({c['url']})")
 
 
 def _tips_block(items):

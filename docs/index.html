@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Unbounded:wght@500;600&display=swap">
-<link rel="stylesheet" href="style.css?v=1.5.0">
+<link rel="stylesheet" href="style.css?v=1.6.0">
 </head>
 <body>
 <header class="top">
@@ -22,13 +22,14 @@
       <h1>Ввоз авто в Казахстан</h1>
       <span class="asof" id="asof">Ставки сверены 15.10.2026 · МРП 4 325 тг · EUR 504,20 тг</span>
     </div>
-    <p class="lede">Все платежи при ввозе легкового автомобиля с постановкой на учёт: пошлина, НДС, акциз, утильсбор, сбор за регистрацию, техпаспорт и номера. Сразу по шести маршрутам, у каждого платежа указана норма.</p>
+    <p class="lede">Все платежи при ввозе автомобиля или техники с постановкой на учёт: пошлина, НДС, акциз, утильсбор, сбор за регистрацию, техпаспорт и номера. Легковые — сразу по шести маршрутам, отдельно — грузовики, мотоциклы и спецтехника; у каждого платежа указана норма, рядом — сравнение с ценами Kolesa.</p>
     <p class="gift">Бесплатно, без регистрации и рекламы — в помощь всем, кто везёт машину в Казахстан. Автор — <b>TAS · Aseke</b>.</p>
   </div>
 </header>
 <nav class="tabs" aria-label="Разделы">
   <div class="wrap" role="tablist">
     <button role="tab" data-tab="calc" aria-selected="true">Калькулятор</button>
+    <button role="tab" data-tab="vehicles" aria-selected="false">Грузовики и спецтехника</button>
     <button role="tab" data-tab="savings" aria-selected="false">Как сэкономить</button>
     <button role="tab" data-tab="analytics" aria-selected="false">Аналитика</button>
     <button role="tab" data-tab="rates" aria-selected="false">База ставок</button>
@@ -58,6 +59,11 @@
               <label for="deliv">Доставка и страховка до границы ЕАЭС</label>
               <input type="number" id="deliv" min="0" step="100" value="2000" inputmode="decimal">
               <p class="hint">В той же валюте. По ДТ — в РК или при растаможке в Кыргызстане — входит в таможенную стоимость и увеличивает пошлину и НДС, по ПТД — нет; для машин с рынка России и Беларуси не учитывается. Ориентиры: автовоз из Китая $2,5–4,5 тыс., из США $3,6–4,6 тыс.</p>
+            </div>
+            <div class="field">
+              <label for="model">Модель — для сравнения с ценами Kolesa</label>
+              <select id="model"><option value="">не выбрана</option></select>
+              <p class="hint">Необязательно: покажет, сколько такие машины того же года стоят в объявлениях Kolesa.kz.</p>
             </div>
             <div class="field">
               <label for="fuel">Двигатель</label>
@@ -93,6 +99,7 @@
             </div>
             <div class="subline" id="ages">—</div>
             <div class="tips" id="tips-best" hidden></div>
+            <div class="tips" id="kolesa-box" hidden></div>
           </div>
           <div class="card">
             <div class="toolbar">
@@ -122,6 +129,58 @@
         <div class="card stack">
           <h2 class="section-title">Термины и сокращения</h2>
           <div id="gl-terms"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="vehicles" role="tabpanel" hidden>
+      <div class="calc">
+        <div class="card">
+          <form class="car" id="veh" autocomplete="off">
+            <div class="field"><label for="vh-group">Группа</label><select id="vh-group"></select></div>
+            <div class="field"><label for="vh-kind">Вид техники</label><select id="vh-kind"></select></div>
+            <div class="field">
+              <label for="vh-price">Цена покупки</label>
+              <div class="row-price">
+                <input type="number" id="vh-price" min="0" step="1000" value="40000" inputmode="decimal">
+                <select id="vh-cur" aria-label="Валюта"><option>EUR</option><option>USD</option><option>CNY</option><option>RUB</option><option>KZT</option></select>
+              </div>
+            </div>
+            <div class="field"><label for="vh-deliv">Доставка и страховка до границы ЕАЭС</label><input type="number" id="vh-deliv" min="0" step="100" value="3000" inputmode="decimal"><p class="hint">В той же валюте. По ДТ входит в таможенную стоимость, по ПТД — нет.</p></div>
+            <div class="row2">
+              <div class="field"><label for="vh-year">Год выпуска</label><select id="vh-year"></select></div>
+              <div class="field"><label for="vh-month">Месяц выпуска</label><select id="vh-month"></select></div>
+            </div>
+            <div class="field" data-f="mass"><label for="vh-mass">Полная масса, т</label><input type="number" id="vh-mass" min="0.5" max="150" step="0.5" value="18"></div>
+            <div class="field" data-f="payload"><label for="vh-payload">Грузоподъёмность, т</label><input type="number" id="vh-payload" min="0" max="100" step="0.5" value="10"><p class="hint">Для налога на транспорт.</p></div>
+            <div class="field" data-f="cc"><label for="vh-cc">Объём двигателя, см³</label><input type="number" id="vh-cc" min="0" max="30000" step="100" value="7700"></div>
+            <div class="field" data-f="kw"><label for="vh-kw">Мощность, кВт</label><input type="number" id="vh-kw" min="1" max="1500" step="5" value="150"><p class="hint">1 кВт = 1,36 л.с.</p></div>
+            <label class="check" data-f="eco4"><input type="checkbox" id="vh-eco4" checked> Экокласс 4 и выше (Евро-4+)</label>
+            <label class="check" data-f="electric"><input type="checkbox" id="vh-electric"> Электрический</label>
+          </form>
+        </div>
+        <div class="stack">
+          <div class="card verdict">
+            <div class="best" id="vh-best">—</div>
+            <div class="figures">
+              <div class="figure"><div class="label">Платежи</div><div class="value" id="vh-total">—</div></div>
+              <div class="figure"><div class="label">Налог на транспорт в год</div><div class="value" id="vh-tax">—</div></div>
+            </div>
+            <div class="subline" id="vh-ages">—</div>
+            <div class="tips" id="vh-tips" hidden></div>
+          </div>
+          <div class="card">
+            <h2 class="section-title">Сравнение маршрутов</h2>
+            <div class="table-wrap" style="margin-top:10px"><table id="vh-table"></table></div>
+          </div>
+          <div class="card">
+            <h2 class="section-title">Разбивка по маршруту</h2>
+            <div class="seg" id="vh-seg" style="margin:10px 0 12px"></div>
+            <p class="note" id="vh-who"></p>
+            <div class="table-wrap"><table id="vh-lines"></table></div>
+            <div class="flags" id="vh-flags"></div>
+            <p class="note" style="margin-top:10px">Не учтены: льготы по инвестконтрактам и промсборке, преференции по происхождению. Рыночные расходы для грузовиков и техники — ориентиры: официальных тарифов СБКТС и ЭПСМ нет.</p>
+          </div>
         </div>
       </div>
     </section>
@@ -234,8 +293,9 @@
 </main>
 <footer><div class="wrap"><span>Автор — TAS · Aseke</span><span>Бесплатно, в помощь всем</span><span id="asof-foot">Ставки сверены 15.10.2026</span><span>Справочный расчёт, не официальная позиция госорганов</span><a href="https://github.com/aslantuk-bit/kz-auto-import">Исходники на GitHub</a></div></footer>
 <div class="tip" id="tip" hidden></div>
-<script src="calc.js?v=1.5.0"></script>
-<script src="tips.js?v=1.5.0"></script>
-<script src="app.js?v=1.5.0"></script>
+<script src="calc.js?v=1.6.0"></script>
+<script src="tips.js?v=1.6.0"></script>
+<script src="vehicles.js?v=1.6.0"></script>
+<script src="app.js?v=1.6.0"></script>
 </body>
 </html>

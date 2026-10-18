@@ -211,3 +211,5 @@ footer .wrap { padding-block: 18px 28px; display: flex; flex-wrap: wrap; gap: 6p
 @media (prefers-reduced-motion: no-preference) {
   .chart svg rect.bar { transition: width .25s ease-out, x .25s ease-out; }
 }
+
+#veh [hidden] { display: none !important; }

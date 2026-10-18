@@ -8,7 +8,7 @@
   const pct = (n, d = 0) => n.toFixed(d).replace(".", ",") + "%";
   const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
-  const data = await (await fetch("data.json?v=1.5.0")).json();
+  const data = await (await fetch("data.json?v=1.6.0")).json();
   const K = KZCalc.make(data.constants);
   const C = data.constants;
   const now = new Date(), TODAY = { y: now.getFullYear(), m: now.getMonth() + 1 };
@@ -173,6 +173,8 @@
   for (let y = TODAY.y; y >= 1995; y--) yearSel.add(new Option(y, y));
   for (let m = 1; m <= 12; m++) monthSel.add(new Option(m, m));
   yearSel.value = 2022; monthSel.value = 6;
+  const KOL = data.kolesa || { models: {} };
+  Object.entries(KOL.models).sort((a, b) => a[1].name.localeCompare(b[1].name)).forEach(([slug, m]) => $("#model").add(new Option(m.name, slug)));
   let selectedRoute = null;
 
   // Ссылка на расчёт: #calc?p=15000&d=2000&c=EUR&f=бензин&v=2000&y=2022&m=6&mk=1
@@ -182,12 +184,12 @@
     const q = new URLSearchParams(hashQuery);
     const set = (id, v) => v != null && ($("#" + id).value = v);
     set("price", q.get("p")); set("deliv", q.get("d") ?? 0); set("cur", q.get("c")); set("fuel", q.get("f")); set("cc", q.get("v"));
-    set("year", q.get("y")); set("month", q.get("m")); $("#market").checked = q.get("mk") === "1";
+    set("year", q.get("y")); set("month", q.get("m")); set("model", q.get("md")); $("#market").checked = q.get("mk") === "1";
   }
 
   // Последний расчёт хранится в браузере: после перезагрузки страницы поля заполнены теми же значениями.
   // Ссылка на расчёт (#calc?…) важнее сохранённого.
-  const STORE = "kzai.calc.v1", FIELDS = ["price", "deliv", "cur", "fuel", "cc", "year", "month"];
+  const STORE = "kzai.calc.v1", FIELDS = ["price", "deliv", "cur", "fuel", "cc", "year", "month", "model"];
   if (!hashQuery) {
     try {
       const s = JSON.parse(localStorage.getItem(STORE) || "null");
@@ -230,6 +232,7 @@
     const tp = KZTips.forCar(K, C, { price_eur: car.priceEur, deliv_eur: car.delivEur, fuel: car.fuel, cc: car.cc, age: car.age,
       age_reg: car.ageReg, year: car.y, month: car.m, today_year: TODAY.y, today_month: TODAY.m });
     renderTips(tp.general);
+    renderKolesa($("#model").value, car.y, best);
     $("#ages").textContent = `Цена покупки ${fmt(best.value_kzt)} тг (${fmt(car.priceEur)} €), таможенная стоимость по ДТ с доставкой — ${fmt(dt.customs_value)} тг. Для таможни машине ${car.age} полных лет, для сбора за регистрацию — ${car.ageReg} (считается «включая год выпуска»).`;
 
     const showRu = $("#show-ru").checked;
@@ -256,6 +259,20 @@
   const PY_KEY = { duty: "пошлина", etp: "ЕТП_СТП", customs_fee: "таможенный_сбор", excise: "акциз", vat: "НДС",
     abroad: "за_рубежом", util: "утильсбор", reg_fee: "сбор_первичная_регистрация", docs: "СРТС_и_номера" };
   const KIND = { "сейчас": ["✅", "можно сделать с этой машиной"], "выбор": ["🔁", "если выбирать машину или уточнить код"], "внимание": ["⚠️", "учесть"] };
+  function renderKolesa(slug, year, best) {
+    const el = $("#kolesa-box");
+    el.hidden = !slug;
+    if (!slug) return;
+    const m = KOL.models[slug], y = m && m.years[String(year)];
+    const url = `https://kolesa.kz/cars/${slug}/?year[from]=${year}&year[to]=${year}`;
+    const title = `<div class="tips-title">Ввезти самому или купить в Казахстане — ${esc(m ? m.name : slug)} ${year} года</div>`;
+    if (!y || (y.n || 0) < KOL.min) { el.innerHTML = title + `<p class="note" style="margin:0">На Kolesa мало объявлений этого года — сравнить не с чем. <a href="${url}" target="_blank" rel="noopener">Открыть выдачу</a></p>`; return; }
+    const landed = best.value_kzt + best.total_market, diff = y.med - landed;
+    const fig = (l, v) => `<div class="figure"><div class="label">${l}</div><div class="value" style="font-size:clamp(18px,2.6vw,24px)">${v}</div></div>`;
+    el.innerHTML = title + `<div class="figures">${fig("Ввоз под ключ", mln(landed) + " тг")}${fig("Kolesa, медиана", mln(y.med) + " тг")}${fig(diff > 0 ? "Ввоз выгоднее" : "Купить здесь дешевле", mln(Math.abs(diff)) + " тг")}</div>` +
+      `<p class="note" style="margin:6px 0 0">По ${y.n} объявлениям из ${fmt(y.found)}${y.v ? `, обычно ${y.v} л` : ""}${y.f ? `, ${y.f}` : ""}; разброс ${mln(y.p25)}–${mln(y.p75)} тг. Kolesa.kz на ${KOL.date ? KOL.date.slice(0, 10).split("-").reverse().join(".") : "—"}. Цены объявлений — цены продавцов, торг обычно 5–10%; машины уже на учёте в РК. «Ввоз под ключ» — цена, доставка, все платежи и рыночные расходы по самому дешёвому маршруту. <a href="${url}" target="_blank" rel="noopener">Объявления на Kolesa</a></p>`;
+  }
+
   function renderTips(items) {
     const el = $("#tips-best");
     el.hidden = !items.length;
@@ -271,13 +288,78 @@
   $("#show-ru").addEventListener("change", () => { renderCalc(); saveCar(); });
   $("#share").addEventListener("click", async () => {
     const c = readCar();
-    const q = new URLSearchParams({ p: c.price, d: c.deliv, c: c.cur, f: c.fuel, v: c.cc, y: c.y, m: c.m, mk: $("#market").checked ? 1 : 0 });
+    const q = new URLSearchParams({ p: c.price, d: c.deliv, md: $("#model").value, c: c.cur, f: c.fuel, v: c.cc, y: c.y, m: c.m, mk: $("#market").checked ? 1 : 0 });
     const url = location.origin + location.pathname + "#calc?" + q.toString();
     history.replaceState(null, "", "#calc?" + q.toString());
     try { await navigator.clipboard.writeText(url); $("#share-status").textContent = "Ссылка скопирована — по ней откроется этот же расчёт."; }
     catch { $("#share-status").textContent = url; }
   });
 
+
+  /* ---------- грузовики, мото, спецтехника ---------- */
+  const VH = KZVehicles.make(C), VK = KZVehicles.KINDS;
+  const VH_ROUTE = { dt: "Третьи страны · ДТ", ptd: "Третьи страны · ПТД", ru_ul: "Россия/Беларусь · ЮЛ", ru_fl: "Россия/Беларусь · ФЛ" };
+  const VH_LINES = [["пошлина", "Пошлина", "ЕТТ ЕАЭС (Решение № 80) или ставки РК по ВТО (Решение № 59)"],
+    ["ЕТП_СТП", "Совокупный платёж (ПТД)", "Решение № 107, прил. 2, табл. 2, п. 1: пошлина по ЕТТ + НДС"],
+    ["таможенный_сбор", "Таможенный сбор", "ПП РК № 171: 6 МРП"], ["НДС", "НДС 16%", "НК ст. 503"],
+    ["утильсбор", "Утильсбор", "приказ МЭПР № 54, прил. 4 (мото и строительная техника не облагаются)"],
+    ["сбор_первичная_регистрация", "Сбор за регистрацию", "НК ст. 615 п. 3"], ["СРТС_и_номера", "Техпаспорт и номера", "НК ст. 667"]];
+  const vhGroups = [...new Set(Object.values(VK).map((v) => v[1]))];
+  vhGroups.forEach((g) => $("#vh-group").add(new Option(g, g)));
+  for (let y = TODAY.y; y >= 1990; y--) $("#vh-year").add(new Option(y, y));
+  for (let m = 1; m <= 12; m++) $("#vh-month").add(new Option(m, m));
+  $("#vh-year").value = TODAY.y - 4; $("#vh-month").value = 6;
+  const VH_STORE = "kzai.veh.v1", VH_FIELDS = ["vh-group", "vh-kind", "vh-price", "vh-cur", "vh-deliv", "vh-year", "vh-month", "vh-mass", "vh-payload", "vh-cc", "vh-kw"];
+  function fillKinds() {
+    const g = $("#vh-group").value, cur = $("#vh-kind").value;
+    $("#vh-kind").innerHTML = "";
+    Object.entries(VK).filter(([, v]) => v[1] === g).forEach(([k, v]) => $("#vh-kind").add(new Option(v[0], k)));
+    if ([...$("#vh-kind").options].some((o) => o.value === cur)) $("#vh-kind").value = cur;
+  }
+  let vhSaved = null;
+  try { vhSaved = JSON.parse(localStorage.getItem(VH_STORE) || "null"); } catch { /* нет хранилища */ }
+  if (vhSaved && vhGroups.includes(vhSaved["vh-group"])) $("#vh-group").value = vhSaved["vh-group"];
+  fillKinds();
+  if (vhSaved) {
+    VH_FIELDS.forEach((id) => { const el = $("#" + id); if (vhSaved[id] != null && (!el.options || [...el.options].some((o) => o.value == vhSaved[id]))) el.value = vhSaved[id]; });
+    $("#vh-eco4").checked = vhSaved.eco4 !== false; $("#vh-electric").checked = !!vhSaved.electric;
+  }
+  let vhRoute = null;
+  function renderVehicles() {
+    const kind = $("#vh-kind").value, fields = VK[kind][3];
+    document.querySelectorAll("#veh [data-f]").forEach((el) => (el.hidden = !fields.includes(el.dataset.f)));
+    const cur = $("#vh-cur").value, k = data.fx[cur] / data.fx.EUR, y = +$("#vh-year").value, mo = +$("#vh-month").value;
+    const months = (TODAY.y - y) * 12 + (TODAY.m - mo) - (now.getDate() < 15 ? 1 : 0);
+    const m = { kind, price_eur: (+$("#vh-price").value || 0) * k, age: Math.max(Math.floor(months / 12), 0), age_reg: TODAY.y - y,
+      delivery_eur: (+$("#vh-deliv").value || 0) * k, mass: fields.includes("mass") ? +$("#vh-mass").value || 0 : 0,
+      payload: fields.includes("payload") ? +$("#vh-payload").value || 0 : 0, cc: fields.includes("cc") ? Math.round(+$("#vh-cc").value || 0) : 0,
+      kw: fields.includes("kw") ? +$("#vh-kw").value || 0 : 0, eco4: fields.includes("eco4") ? $("#vh-eco4").checked : true,
+      electric: fields.includes("electric") ? $("#vh-electric").checked : false, mode: "ДТ", origin: "третьи" };
+    const rows = VH.routesFor(m).map(([id, mode, origin]) => ({ id, label: VH_ROUTE[id], ...VH.calcMachine({ ...m, mode, origin }) }));
+    const third = rows.filter((r) => (r.id === "dt" || r.id === "ptd") && !new RegExp(C.BLOCKING).test(r["примечания"]));
+    const best = third.reduce((a, b) => (b["итого_обязательные"] < a["итого_обязательные"] ? b : a), third[0]);
+    if (!vhRoute || !rows.some((r) => r.id === vhRoute)) vhRoute = best.id;
+    $("#vh-best").innerHTML = `Дешевле всего из третьих стран: <b>${esc(best.label)}</b>. Регистрирует: ${esc(best["регистрирует"])}.`;
+    $("#vh-total").innerHTML = `${fmt(best["итого_обязательные"])}<small>тг</small>`;
+    $("#vh-tax").innerHTML = `${fmt(best["налог_на_транспорт_год"])}<small>тг</small>`;
+    $("#vh-ages").textContent = `Для таможни технике ${m.age} полных лет, для сбора за регистрацию — ${m.age_reg} (включая год выпуска).`;
+    const tp = VH.tips(m, TODAY.y), box = $("#vh-tips");
+    box.hidden = !tp.length;
+    box.innerHTML = `<div class="tips-title">Как сэкономить на этой технике</div><ul>${tp.map((t) => `<li>${esc(t.text)}</li>`).join("")}</ul>`;
+    $("#vh-table").innerHTML = `<thead><tr><th>Маршрут</th><th class="num">Итого, тг</th><th class="num">С доставкой и услугами</th><th class="num">Пошлина / СТП</th><th class="num">НДС</th><th class="num">Утильсбор</th><th class="num">Сбор за регистрацию</th><th>Примечания</th></tr></thead><tbody>` +
+      rows.map((r) => `<tr class="${r.id === best.id ? "is-best" : ""}"><td>${esc(r.label)}</td><td class="num"><b>${fmt(r["итого_обязательные"])}</b></td><td class="num">${fmt(r["итого_с_рыночными"])}</td><td class="num">${fmt(r["пошлина"] + r["ЕТП_СТП"])}</td><td class="num">${fmt(r["НДС"])}</td><td class="num">${fmt(r["утильсбор"])}</td><td class="num">${fmt(r["сбор_первичная_регистрация"])}</td><td class="tip-cell">${esc(r["примечания"])}</td></tr>`).join("") + "</tbody>";
+    $("#vh-seg").innerHTML = rows.map((r) => `<button type="button" data-route="${r.id}" aria-pressed="${r.id === vhRoute}">${esc(r.label)}</button>`).join("");
+    const r = rows.find((x) => x.id === vhRoute);
+    $("#vh-who").textContent = `Ставка пошлины: ${r["ставка_пошлины"]} · регистрирует ${r["регистрирует"]}`;
+    $("#vh-lines").innerHTML = `<thead><tr><th>Платёж</th><th class="num">Сумма, тг</th><th>Норма</th></tr></thead><tbody>` +
+      VH_LINES.filter(([key]) => r[key] > 0).map(([key, label, norm]) => `<tr><td>${label}</td><td class="num">${fmt(r[key])}</td><td>${esc(norm)}</td></tr>`).join("") +
+      `<tr class="total"><td>Итого обязательные</td><td class="num">${fmt(r["итого_обязательные"])}</td><td></td></tr><tr><td>Доставка и рыночные расходы (оценка)</td><td class="num">${fmt(r["доставка_кзт"] + r["рыночные_оценка"])}</td><td>доставка; брокер, СВХ, СБКТС или сертификат, ОГПО</td></tr></tbody>`;
+    $("#vh-flags").innerHTML = r["примечания"].split("; ").filter(Boolean).map((f) => `<div class="flag">${esc(f)}</div>`).join("");
+    try { localStorage.setItem(VH_STORE, JSON.stringify({ ...Object.fromEntries(VH_FIELDS.map((id) => [id, $("#" + id).value])), eco4: $("#vh-eco4").checked, electric: $("#vh-electric").checked })); } catch { /* нет хранилища */ }
+  }
+  $("#vh-group").addEventListener("change", () => { fillKinds(); renderVehicles(); });
+  $("#veh").addEventListener("input", (e) => { if (e.target.id !== "vh-group") renderVehicles(); });
+  $("#vh-seg").addEventListener("click", (e) => { const b = e.target.closest("button[data-route]"); if (b) { vhRoute = b.dataset.route; renderVehicles(); } });
 
   /* ---------- термины ---------- */
   function renderGlossary() {
@@ -444,7 +526,7 @@
       data.sources.map((s) => `<tr><td>${s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.act)}</a>` : esc(s.act)}</td><td class="num">${s.n}</td><td>${esc(s.blocks)}</td></tr>`).join("") + "</tbody>";
   }
 
-  const render = { calc: renderCalc, savings: renderSavings, analytics: renderAnalytics, rates: renderRates, questions: renderQuestions, about: renderAbout };
+  const render = { calc: renderCalc, vehicles: renderVehicles, savings: renderSavings, analytics: renderAnalytics, rates: renderRates, questions: renderQuestions, about: renderAbout };
   let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => render[tabs.find((b) => b.getAttribute("aria-selected") === "true").dataset.tab]?.(), 150); });
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => render.analytics && !$("#analytics").hidden && renderAnalytics());
   showTab(hashTab || "calc", false);

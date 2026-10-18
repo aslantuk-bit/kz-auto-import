@@ -58,6 +58,16 @@ def test_inputs_survive():
     STATE_FILE.unlink(missing_ok=True)
 
 
+def test_vehicles():
+    at = check(page("ui.page_vehicles", "render"), "техника: грузовик")
+    for group, kind in (("Мотоциклы", "moto"), ("Самоходная техника", "excavator"), ("Самоходная техника", "combine"),
+                        ("Грузовики и спецмашины", "tractor_unit")):
+        at.selectbox(key="vh_group").set_value(group)
+        at.run()
+        at.selectbox(key="vh_kind").set_value(kind)
+        check(at, f"техника: {kind}")
+
+
 def test_analytics():
     at = check(page("ui.page_analytics", "render"), "аналитика")
     at.selectbox(key="an_engine").set_value("Электромобиль")
@@ -85,6 +95,6 @@ def test_misc():
 
 
 if __name__ == "__main__":
-    for t in (test_inputs_survive, test_calc, test_savings, test_analytics, test_rates, test_misc):
+    for t in (test_inputs_survive, test_calc, test_vehicles, test_savings, test_analytics, test_rates, test_misc):
         t()
     print("все страницы отрисованы")
