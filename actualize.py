@@ -371,7 +371,9 @@ def publish_site(token=None):
     req = urllib.request.Request(api, headers=hdr)
     with urllib.request.urlopen(req, timeout=60, context=_ctx()) as r:
         sha = json.load(r)["sha"]
+    author = {"name": "TAS", "email": "fatimafatima@MacBook-Pro-fatima-2.local"}   # как у остальных коммитов
     body = json.dumps({"message": f"Актуализация данных {date.today():%d.%m.%Y}", "sha": sha,
+                       "author": author, "committer": author,
                        "content": base64.b64encode((OUT / "data.json").read_bytes()).decode()}).encode()
     req = urllib.request.Request(api, data=body, method="PUT", headers={**hdr, "Content-Type": "application/json"})
     with urllib.request.urlopen(req, timeout=120, context=_ctx()) as r:
