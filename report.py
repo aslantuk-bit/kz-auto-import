@@ -104,7 +104,7 @@ def main():
     share = (sc.pivot_table(index="маршрут", columns="возрастная_группа",
                             values="доля_обязательных_pct", aggfunc="median", observed=True)
              .round(1))
-    struct_cols = ["пошлина", "ЕТП_СТП", "таможенный_сбор", "акциз_объём", "акциз_10pct", "НДС",
+    struct_cols = ["пошлина", "ЕТП_СТП", "таможенный_сбор", "акциз_объём", "акциз_10pct", "НДС", "за_рубежом",
                    "утильсбор", "сбор_первичная_регистрация", "СРТС_и_номера"]
     struct = sc.groupby("маршрут")[struct_cols].sum()
     struct = (struct.div(struct.sum(axis=1), axis=0) * 100).round(1)

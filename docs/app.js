@@ -8,7 +8,7 @@
   const pct = (n, d = 0) => n.toFixed(d).replace(".", ",") + "%";
   const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
-  const data = await (await fetch("data.json?v=1.2.0")).json();
+  const data = await (await fetch("data.json?v=1.3.0")).json();
   const K = KZCalc.make(data.constants);
   const C = data.constants;
   const TODAY = { y: 2026, m: 10 };
@@ -19,6 +19,7 @@
     ["customs_fee", "Таможенный сбор", "ПП РК № 171: 6 МРП за декларацию", "--s3"],
     ["excise", "Акциз", "НК ст. 537: 100 тг/см³ свыше 3 000 см³; 10% от 18 000 МРП", "--s4"],
     ["vat", "НДС 16%", "НК ст. 503 (третьи страны — ст. 466, ЕАЭС — ст. 518)", "--s5"],
+    ["abroad", "Платежи в Кыргызстане", "пошлина по ЕТТ, НДС 12% и сбор 0,4% при растаможке в КР", "--ink-3"],
     ["util", "Утильсбор", "Приказ МЭПР № 54 от 20.03.2026, прил. 4", "--s6"],
     ["reg_fee", "Сбор за регистрацию", "НК ст. 615 п. 3", "--s7"],
     ["docs", "Техпаспорт и номера", "НК ст. 667: 1,25 + 2,8 МРП", "--s8"],
@@ -26,10 +27,10 @@
   const ROUTES = [
     ["dt", "ДТ", "третьи", "Третьи страны · ДТ", "Юрлицо или физлицо, декларация на товары", "--s1"],
     ["ptd", "ПТД", "третьи", "Третьи страны · ПТД", "Физлицо, личное пользование, единая ставка", "--s2"],
-    ["kg_ul", "ЕАЭС_ЮЛ", "третьи", "Кыргызстан/Армения · ЮЛ", "НДС и акциз через налоговую (ФНО 328.00)", "--s3"],
-    ["kg_fl", "ЕАЭС_ФЛ", "третьи", "Кыргызстан/Армения · ФЛ", "Физлицо не для бизнеса: НДС не взимается", "--s4"],
-    ["ru_ul", "ЕАЭС_ЮЛ", "РФ_РБ", "Россия/Беларусь · ЮЛ", "Утильсбор по коэффициенту 2", "--s5"],
-    ["ru_fl", "ЕАЭС_ФЛ", "РФ_РБ", "Россия/Беларусь · ФЛ", "Утильсбор по коэффициенту 2", "--s6"],
+    ["kg_ul", "ЕАЭС_ЮЛ", "третьи", "Через Кыргызстан · ЮЛ", "Растаможка в КР по ЕТТ, в РК — НДС 16% через ФНО 328.00", "--s3"],
+    ["kg_fl", "ЕАЭС_ФЛ", "третьи", "Через Кыргызстан · ФЛ", "Растаможка в КР по ЕТТ с НДС 12%, в РК — утильсбор и регистрация", "--s4"],
+    ["ru_ul", "ЕАЭС_ЮЛ", "РФ_РБ", "Россия/Беларусь · ЮЛ", "Машина с рынка России или Беларуси; утильсбор по коэффициенту 2", "--s5"],
+    ["ru_fl", "ЕАЭС_ФЛ", "РФ_РБ", "Россия/Беларусь · ФЛ", "Машина с рынка России или Беларуси; утильсбор по коэффициенту 2", "--s6"],
   ].map(([id, mode, origin, label, who, color]) => ({ id, mode, origin, label, who, color }));
   const isRu = (r) => r.origin === "РФ_РБ";
   const FUEL = { "бензин": "Бензин", "дизель": "Дизель", "гибрид_двс": "Гибрид (мощнее ДВС)", "гибрид_эл": "Гибрид (мощнее электромотор)", "электро": "Электромобиль" };
@@ -196,7 +197,8 @@
     const car = readCar(), market = $("#market").checked, key = market ? "total_market" : "total";
     const rows = ROUTES.map((r) => ({ ...r, ...K.calc({ price_eur: car.priceEur, delivery_eur: car.delivEur, fuel: car.fuel, cc: car.cc, age: car.age, mode: r.mode, origin: r.origin, age_reg: car.ageReg }) }));
     const ok = rows.filter((r) => !r.blocked);
-    const best = ok.reduce((a, b) => (b[key] < a[key] ? b : a), ok[0]);
+    const pool = ok.length ? ok : rows;
+    const best = pool.reduce((a, b) => (b[key] < a[key] ? b : a), pool[0]);
     if (!selectedRoute || !rows.some((r) => r.id === selectedRoute)) selectedRoute = best.id;
     $("#best").innerHTML = `Дешевле всего: <b>${esc(best.label)}</b> — ${esc(best.who[0].toLowerCase() + best.who.slice(1))}.`;
     $("#best-total").innerHTML = `${fmt(best[key])}<small>тг</small>`;
@@ -250,39 +252,31 @@
 
   /* ---------- как сэкономить ---------- */
   function renderSavings() {
-    const d = data.savings, m = (v) => mln(v) + " тг", ev = d.ev.example, a = d.age, v = d.volume, t = d.ptd_dt;
-    const card = (title, body) => `<div class="card stack"><h2 class="section-title">${title}</h2>${body}</div>`;
-    const figs = (items) => `<div class="figures">${items.map(([l, val]) => `<div class="figure"><div class="label">${l}</div><div class="value" style="font-size:clamp(20px,3vw,26px)">${val}</div></div>`).join("")}</div>`;
-    const ageWord = (n) => (n === 1 ? "год" : n >= 2 && n <= 4 ? "года" : "лет");
-    const ptdRows = Object.keys(t.rows).map((age) => `<tr><td>${age} ${ageWord(+age)}</td>${t.rows[age].map((x) => {
-      const val = x / 1e6, s = (val >= 0 ? "+" : "") + val.toFixed(1).replace(".", ",");
-      return `<td class="num" style="color:${val < 0 ? "var(--div-neg)" : "var(--ink-2)"};font-weight:${val < 0 ? 600 : 400}">${s}</td>`; }).join("")}</tr>`).join("");
-    $("#sv").innerHTML = [
-      card("Самый выгодный профиль", `<p style="margin:0;font-size:16px">Электромобиль или машина с ДВС до 2 000 см³, не старше 2 лет по году выпуска, дешевле ${fmt(Math.floor(d.lux.eur / 100) * 100)} €, ввоз из Китая, Кореи или Японии по ДТ. Для дорогой машины 3–5 лет — ПТД.</p>
-        <p class="note">Посчитано тем же калькулятором по ${fmt(d.configs)} машинам × 6 маршрутов: 9 двигателей, возраст 0–15 лет, 12 цен от 5 до 150 тыс. €. Машины из третьих стран — с доставкой ${fmt(d.delivery_eur)} € до границы ЕАЭС: по ДТ она входит в таможенную стоимость, по ПТД — нет. Варианты, которые нельзя поставить на учёт, исключены.</p>`),
-      card("Не ввозить через Россию и Беларусь", `<p style="margin:0">В лучшем случае дороже лучшего маршрута на <b>${m(d.ru.min)}</b>, в среднем — на <b>${m(d.ru.median)}</b>. Причина — утильсбор по коэффициенту 2 (приказ МЭПР № 54).</p>`),
-      card("Электромобиль — из третьих стран по ДТ", `<p style="margin:0">Выигрывает в ${d.ev.wins} из ${d.ev.n} вариантов: пошлина 0% по перечню ВТО, утильсбора нет, остаются НДС 16% и сборы. Так же оформляется гибрид, у которого мощнее электромотор.</p>
-        ${figs([["Электромобиль", m(ev["электро"])], ["Гибрид (мощнее электромотор)", m(ev["гибрид_эл"])], ["Бензин 2,0 л", m(ev["бензин"])]])}
-        <p class="note">Машина за ${fmt(d.ev.example_price)} €, 1 год, третьи страны · ДТ.</p>`),
-      card("Возраст: граница — 3 года по году выпуска", `${figs([["2 года вместо 1", "+" + m(a.dt_1_2)], ["3 года вместо 2", "+" + m(a.dt_2_3)], ["ПТД: 6 лет вместо 5", "+" + m(a.ptd_5_6)]])}
-        <p style="margin:0">Сбор за регистрацию считает возраст «включая год выпуска»: машина декабря 2023 года в 2026-м — уже «3 года и старше», января 2024-го — ещё нет. Разница до 2 млн тг может решаться месяцем выпуска.</p>
-        <p class="note">Бензин 2,0 л, ${fmt(a.price)} €, третьи страны · ДТ. Скачок на 3 годах — сбор 500 МРП вместо 50; на 6 годах по ПТД — повышенная единая ставка.</p>`),
-      card("Объём: до 3 000 см³, лучше до 2 000", `<div class="table-wrap"><table><thead><tr><th>Граница</th><th>Что меняется</th><th class="num">Цена перехода</th></tr></thead><tbody>
-        <tr><td>2 000 → 2 100 см³</td><td>утильсбор 3,5 → 5</td><td class="num">+${m(v.v2000_2100)}</td></tr>
-        <tr><td>3 000 → 3 100 см³</td><td>акциз 100 тг за каждый см³ всего объёма, утильсбор 11,5</td><td class="num">+${m(v.v3000_3100)}</td></tr></tbody></table></div>
-        <p style="margin:0">Парадокс ЕТТ: новая бензиновая машина 2,8–3,0 л платит пошлину 12,5% вместо 15%, поэтому новая 2,9 л (${fmt(v.new_2900)} тг) дешевле новой 2,0 л (${fmt(v.new_2000)} тг) той же цены.</p>
-        <p class="note">Машина за ${fmt(v.price)} €; переходы — для 4 лет, сравнение 2,9 и 2,0 л — для 1 года.</p>`),
-      card("ПТД или ДТ для физлица", `<p class="note" style="margin:0">ПТД минус ДТ, млн тг, бензин 2,0 л, доставка ${fmt(d.delivery_eur)} € (по ДТ она в базе, по ПТД — нет). Минус (выделен) — ПТД дешевле.</p>
-        <div class="table-wrap"><table><thead><tr><th>Возраст</th>${t.prices.map((p) => `<th class="num">${fmt(p)} €</th>`).join("")}</tr></thead><tbody>${ptdRows}</tbody></table></div>
-        <p style="margin:0">Новые машины выгоднее по ДТ всегда. Для б/у 3–5 лет единая ставка считается от объёма, а не от цены, поэтому с ${fmt(t.from_price)} € ПТД выигрывает всё сильнее. Чем дороже доставка, тем раньше ПТД становится выгоднее. Старше 5 лет — только ДТ: ЭПТС по ПТД не оформят. Минус ДТ — условный выпуск: машина обращается только в РК.</p>`),
-      card("Кыргызстан и Армения: дёшево на бумаге", `<p style="margin:0">По платежам в РК физлицо из Кыргызстана или Армении выигрывает в <b>${Math.round(d.eaeu.by_kz.kg_fl || 0)}%</b> вариантов: пошлины нет, НДС с физлица не берут. Если прибавить пошлину ЕТТ, уже заложенную в цену машины там, — в <b>${Math.round(d.eaeu.by_landed.kg_fl || 0)}%</b>. Это оценка сверху: местный НДС, сборы и маржа перепродавца не учтены.</p>
-        <p style="margin:0">Правило: маршрут выгоден, только если машина там стоит не дороже той же машины в Китае или Корее плюс 15–20%. Регулярный ввоз могут признать предпринимательским — тогда НДС 16%. Электромобили, ввезённые туда по льготе ЕАЭС, резидентам РК передавать нельзя.</p>`),
-      card("Цена и статус ввозящего", `<ul class="findings">
-        <li>Держаться ниже <b>${fmt(Math.floor(d.lux.eur / 100) * 100)} €</b> (${m(d.lux.kzt)}): с этого порога акциз 10%.</li>
-        <li>У машины за ${fmt(d.cheap.price)} € фиксированные платежи составляют ${Math.round(d.cheap.share_min)}–${Math.round(d.cheap.share_max)}% её стоимости.</li>
-        <li>Юрлицо — плательщик НДС берёт ввозной НДС в зачёт, поэтому для бизнеса ДТ реально дешевле, чем в расчётах: модель зачёт не учитывает.</li></ul>`),
-    ].join("");
+    const d = data.savings;
+    const rich = (s) => esc(s).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
+    const block = (b) => {
+      if (b.t === "p") return `<p style="margin:0">${rich(b.text)}</p>`;
+      if (b.t === "list") return `<ul class="findings">${b.items.map((x) => `<li>${rich(x)}</li>`).join("")}</ul>`;
+      if (b.t === "steps") return `<ol class="steps">${b.items.map((x) => `<li><b>${rich(x.title)}</b> — ${rich(x.text)}</li>`).join("")}</ol>`;
+      if (b.t === "figures") return `<div class="figures">${b.items.map(([l, v]) => `<div class="figure"><div class="label">${rich(l)}</div><div class="value" style="font-size:clamp(20px,3vw,26px)">${rich(v)}</div></div>`).join("")}</div>`;
+      if (b.t === "note") return `<p class="note" style="margin:0">${rich(b.text)}</p>`;
+      if (b.t === "warn") return `<div class="flag">${rich(b.text)}</div>`;
+      if (b.t === "table") {
+        const num = new Set(b.num || []);
+        return (b.caption ? `<p class="note" style="margin:0">${rich(b.caption)}</p>` : "") +
+          `<div class="table-wrap"><table><thead><tr>${b.head.map((h, i) => `<th class="${num.has(i) ? "num" : ""}">${rich(h)}</th>`).join("")}</tr></thead><tbody>` +
+          b.rows.map((r) => `<tr>${r.map((c, i) => `<td class="${num.has(i) ? "num" : ""}">${rich(c)}</td>`).join("")}</tr>`).join("") + "</tbody></table></div>";
+      }
+      return "";
+    };
+    const toc = `<div class="card stack"><h2 class="section-title">Содержание</h2><ol class="toc">${d.sections.map((s) => `<li><button type="button" class="link" data-sv="${esc(s.id)}">${esc(s.title)}</button></li>`).join("")}</ol></div>`;
+    $("#sv").innerHTML = toc + d.sections.map((s) => `<div class="card stack" id="sv-${esc(s.id)}"><h2 class="section-title">${esc(s.title)}</h2>${s.blocks.map(block).join("")}</div>`).join("") +
+      `<p class="note">${rich(d.footer)}</p>`;
   }
+  $("#sv").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-sv]");
+    if (b) document.getElementById("sv-" + b.dataset.sv)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
 
   /* ---------- аналитика ---------- */
   let grid = null;
@@ -306,7 +300,7 @@
     const pick = (f) => grid.filter(f);
     const cur = pick((g) => g.engine === eng && g.price === price && g.age === age);
     const by = Object.fromEntries(cur.map((g) => [g.route.id, g]));
-    const cheap = cur.filter((g) => !isRu(g.route)).reduce((a, b) => (b.total < a.total ? b : a));
+    const cheap = cur.filter((g) => !isRu(g.route) && !g.blocked).reduce((a, b) => (b.total < a.total ? b : a));
     const dtByAge = Object.fromEntries(pick((g) => g.engine === eng && g.price === price && g.route.id === "dt").map((g) => [g.age, g.total]));
     const f = [
       `Дешевле всего — <b>${esc(cheap.route.label)}</b>: ${mln(cheap.total)} тг против ${mln(by.dt.total)} тг по ДТ из третьих стран.`,

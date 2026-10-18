@@ -22,7 +22,8 @@ const col = (name) => head.indexOf(name);
 const FIELDS = { пошлина: "duty", ЕТП_СТП: "etp", таможенный_сбор: "customs_fee", акциз_объём: "excise_cc",
   акциз_10pct: "excise_lux", НДС: "vat", утильсбор: "util", сбор_первичная_регистрация: "reg_fee",
   СРТС_и_номера: "docs", итого_обязательные: "total", рыночные_оценка: "market", налог_на_транспорт_год: "tax_year",
-  доставка_кзт: "delivery", итого_с_рыночными: "total_market", таможенная_стоимость_кзт: "customs_value" };
+  доставка_кзт: "delivery", итого_с_рыночными: "total_market", таможенная_стоимость_кзт: "customs_value",
+  пошлина_там: "duty_abroad", НДС_там: "vat_abroad", сборы_там: "fees_abroad", за_рубежом: "abroad" };
 
 let bad = 0;
 for (const line of lines.slice(1)) {

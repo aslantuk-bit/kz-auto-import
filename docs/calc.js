@@ -7,9 +7,12 @@
   function make(K) {
     const band = (v, edges) => { for (let i = 0; i < edges.length; i++) if (v <= edges[i]) return i; return edges.length; };
     const isEl = (t) => t === "гибрид_эл" || t === "электро";
-    // доставка из третьих стран есть только у ДТ и ПТД; в таможенную стоимость входит только по ДТ
-    const delivery = (c) => (c.mode === "ДТ" || c.mode === "ПТД" ? c.delivery_eur || 0 : 0);
-    const baseEur = (c) => c.price_eur + (c.mode === "ДТ" ? delivery(c) : 0);
+    // маршрут «третьи страны → растаможка в КГ/АМ → РК»
+    const transit = (c) => c.mode.startsWith("ЕАЭС") && c.origin === "третьи";
+    const country = (c) => c.country || "КГ";
+    // доставка из третьих стран: у ДТ, ПТД и растаможки в КГ/АМ; в таможенную стоимость — по ДТ и в КГ/АМ
+    const delivery = (c) => (c.mode === "ДТ" || c.mode === "ПТД" || transit(c) ? c.delivery_eur || 0 : 0);
+    const baseEur = (c) => c.price_eur + (c.mode === "ДТ" || transit(c) ? delivery(c) : 0);
 
     function dutyEtt(c) {
       const v = baseEur(c) * K.EUR;
@@ -43,6 +46,14 @@
       return (c.age <= 5 ? K.PTD_3_5[b] : K.PTD_OVER5[b]) * c.cc * K.EUR;
     }
 
+    function abroad(c) {   // платежи в стране растаможки: пошлина по ЕТТ, НДС (только у физлица), сборы
+      const a = K.ABROAD[country(c)], base = baseEur(c) * K.EUR, duty = dutyEtt(c);
+      const evFree = c.fuel === "электро" && a["НДС_электро_до"] != null && c.age < a["НДС_электро_до"];
+      const vat = evFree || c.mode === "ЕАЭС_ЮЛ" ? 0 : a["НДС"] * (base + duty);
+      const eco = (a["эко"].find(([top]) => c.age <= top) || [0, 0])[1] * base;
+      return { duty_abroad: duty, vat_abroad: vat, fees_abroad: a["сбор"] * base + eco };
+    }
+
     function util(c) {
       if (c.fuel === "электро") return 50 * K.MRP * K.UTIL_EV[c.origin];
       const k = c.origin === "третьи" ? K.UTIL_K1 : K.UTIL_K2;
@@ -70,8 +81,15 @@
     }
 
     function calc(c) {
-      const v = c.price_eur * K.EUR, base = baseEur(c) * K.EUR;
-      const r = { duty: 0, duty_basis: "—", etp: 0, customs_fee: 0, excise_cc: 0, excise_lux: 0, vat: 0 };
+      const v = c.price_eur * K.EUR;
+      let base = baseEur(c) * K.EUR;
+      const r = { duty: 0, duty_basis: "—", etp: 0, customs_fee: 0, excise_cc: 0, excise_lux: 0, vat: 0,
+                  duty_abroad: 0, vat_abroad: 0, fees_abroad: 0 };
+      if (transit(c)) {
+        Object.assign(r, abroad(c));
+        r.duty_basis = `ЕТТ в стране растаможки (${K.ABROAD[country(c)]["название"]})`;
+        base += r.duty_abroad + r.fees_abroad;   // цена покупки у продавца в КГ/АМ
+      }
       const exciseCc = c.fuel !== "электро" && c.cc > 3000 ? 100 * c.cc : 0;
       const lux = base >= K.LUX_THRESHOLD ? Math.max(0.10 * base - exciseCc, 0) : 0;
       if (c.mode === "ДТ") {
@@ -86,7 +104,7 @@
         r.duty_basis = c.fuel === "электро" ? "СТП (ЕТТ + НДС)" : "ЕТП (Решение № 107)";
         r.excise_lux = lux;
       } else if (c.mode === "ЕАЭС_ЮЛ") {
-        r.excise_cc = exciseCc; r.excise_lux = lux; r.vat = K.VAT * (v + exciseCc + lux);
+        r.excise_cc = exciseCc; r.excise_lux = lux; r.vat = K.VAT * ((transit(c) ? base : v) + exciseCc + lux);
       } else if (c.mode === "ЕАЭС_ФЛ") {
         r.excise_lux = lux;
       } else throw new Error("режим " + c.mode);
@@ -94,28 +112,35 @@
       r.reg_fee = regFee(c);
       r.docs = (1.25 + 2.8) * K.MRP;
       r.excise = r.excise_cc + r.excise_lux;
-      r.total = r.duty + r.etp + r.customs_fee + r.excise_cc + r.excise_lux + r.vat + r.util + r.reg_fee + r.docs;
+      r.abroad = r.duty_abroad + r.vat_abroad + r.fees_abroad;
+      r.total = r.duty + r.etp + r.customs_fee + r.excise_cc + r.excise_lux + r.vat + r.abroad + r.util + r.reg_fee + r.docs;
       let market = K.MARKET["ОГПО_год"] + (c.mode === "ДТ" || c.mode === "ПТД" ? K.MARKET["брокер"] + K.MARKET["СВХ"] : 0);
       if (c.mode === "ДТ" || c.mode === "ПТД") market += K.MARKET["СБКТС"] + (c.mode === "ПТД" ? K.MARKET["ЭПТС"] : 0);
+      if (transit(c)) { const a = K.ABROAD[country(c)]; market += a["посредник_eur"] * K.EUR + a["перегон_кзт"] + K.MARKET["СБКТС"] + K.MARKET["ЭПТС"]; }
       r.market = market;
       r.delivery = delivery(c) * K.EUR;
       r.total_market = r.total + market + r.delivery;
       r.value_kzt = v;
-      r.customs_value = c.mode === "ДТ" ? base : c.mode === "ПТД" ? v : 0;
+      r.customs_value = c.mode === "ДТ" || transit(c) ? baseEur(c) * K.EUR : c.mode === "ПТД" ? v : 0;
       r.share_pct = 100 * r.total / v;
       r.tax_year = transportTax(c);
       const flags = [];
       if (c.mode === "ПТД" && c.age > 5) flags.push("ЭПТС по ПТД только до 5 лет (приказ МПС № 474, с 26.09.2026, по СМИ) — регистрация невозможна");
       if (r.duty_basis.startsWith("ВТО")) flags.push("условный выпуск: обращение только в РК");
-      if (c.mode.startsWith("ЕАЭС") && c.fuel === "электро" && c.origin === "третьи")
-        flags.push("электромобиль, ввезённый в КГ/АМ по льготе ЕАЭС, нельзя передавать резидентам РК (Решение Совета ЕЭК № 111); расчёт верен только для машины, растаможенной там по ЕТТ");
+      if (transit(c)) {
+        const name = K.ABROAD[country(c)]["название"];
+        flags.push(`регистрация в РК не подтверждена: ЭПТС выдаёт ${name}, обмена данными ЭПТС с РК нет (Правила ЭПТС, п. 5-1; МПС РК), СБКТС физлицу на ввоз из ЕАЭС не выдают`);
+        if (country(c) === "АМ") flags.push("путь из Армении — транзитом через Россию: риск утильсбора по коэффициенту 2");
+        if (c.mode === "ЕАЭС_ФЛ") flags.push("НДС 16% в РК не начислен (ввоз не для бизнеса, НК ст. 514 п. 6); спорно для машины дороже 360 МРП (Критерии № 690)");
+        if (c.fuel === "электро") flags.push(`электромобиль, ввезённый в ${name} по льготе ЕАЭС, нельзя передавать резидентам РК (Решение Совета ЕЭК № 111); расчёт — для растаможки по ЕТТ`);
+      }
       if (c.mode === "ПТД" && lux) flags.push("акциз 10% при ПТД — спорно");
       r.flags = flags;
-      r.blocked = flags.some((f) => /регистрация невозможна|нельзя передавать/.test(f));
+      r.blocked = flags.some((f) => new RegExp(K.BLOCKING).test(f));
       return r;
     }
 
-    return { calc, dutyEtt, dutyWto, etp, util, regFee, transportTax };
+    return { calc, dutyEtt, dutyWto, etp, abroad, util, regFee, transportTax };
   }
 
   if (typeof module !== "undefined" && module.exports) module.exports = { make };

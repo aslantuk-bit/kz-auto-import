@@ -18,7 +18,7 @@ PORT = 8790
 URL = f"http://localhost:{PORT}"
 FROZEN = getattr(sys, "frozen", False)
 DATA_DIRS = ("sources/raw", "out")
-DATA_VERSION = "1.2.0"   # поднимать, когда меняется состав данных в бандле (сценарии, таблицы)
+DATA_VERSION = "1.3.0"   # поднимать, когда меняется состав данных в бандле (сценарии, таблицы)
 
 
 def bundle_dir():

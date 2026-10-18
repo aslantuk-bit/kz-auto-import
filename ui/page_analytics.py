@@ -29,7 +29,8 @@ def _findings(df, eng, price, age):
     young = df[(df["двигатель"] == eng) & (df["стоимость_eur"] == price) & (df["маршрут"] == "Третьи страны · ДТ")]
     jump = young.set_index("возраст")["итого_обязательные"]
     out = []
-    cheap = by[~by.index.isin(RU_ROUTES)].idxmin()
+    ok = cur[~cur["маршрут"].isin(RU_ROUTES) & ~cur["примечания"].fillna("").str.contains(calc.BLOCKING)]
+    cheap = ok.set_index("маршрут")["итого_обязательные"].idxmin()
     out.append(f"Дешевле всего — **{cheap}**: {money(by[cheap], 'млн')} тг против "
                f"{money(by['Третьи страны · ДТ'], 'млн')} тг по ДТ из третьих стран.")
     out.append(f"Из России или Беларуси та же машина обойдётся в **{money(by['Россия/Беларусь · ФЛ'], 'млн')} тг** "
