@@ -258,7 +258,9 @@ def calc_machine(m: Machine) -> dict:
     r["СРТС_и_номера"] = docs_fee(m)
     gov = ("пошлина", "ЕТП_СТП", "таможенный_сбор", "НДС", "утильсбор", "сбор_первичная_регистрация", "СРТС_и_номера")
     r["итого_обязательные"] = sum(r[k] for k in gov)
-    r["рыночные_оценка"] = _market(m) if third else (0 if m.kind in SELF else 1.9 * MRP * OGPO["N"])
+    # + банк за перевод продавцу; посредник-закупщик — только при покупке в третьих странах (calc.BANK_PCT, AGENT_KZT)
+    r["рыночные_оценка"] = ((_market(m) + calc.AGENT_KZT) if third else (0 if m.kind in SELF else 1.9 * MRP * OGPO["N"])) \
+        + calc.BANK_PCT * v
     r["доставка_кзт"] = deliv
     r["итого_с_рыночными"] = r["итого_обязательные"] + r["рыночные_оценка"] + deliv
     r["стоимость_кзт"] = v

@@ -8,7 +8,7 @@
   const pct = (n, d = 0) => n.toFixed(d).replace(".", ",") + "%";
   const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
-  const data = await (await fetch("data.json?v=1.7.0")).json();
+  const data = await (await fetch("data.json?v=1.7.1")).json();
   const K = KZCalc.make(data.constants);
   const C = data.constants;
   const now = new Date(), TODAY = { y: now.getFullYear(), m: now.getMonth() + 1 };
@@ -251,7 +251,7 @@
     const lines = COMPONENTS.filter(([k]) => r[k] > 0).map(([k, label, norm]) => `<tr><td>${label}</td><td class="num">${fmt(r[k])}</td><td>${esc(norm)}</td><td class="tip-cell">${esc(hint[PY_KEY[k]] || "")}</td></tr>`);
     lines.push(`<tr class="total"><td>Итого обязательные</td><td class="num">${fmt(r.total)}</td><td></td><td class="tip-cell">${esc(tp.routes[r.id] || "")}</td></tr>`);
     if (market && r.delivery) lines.push(`<tr><td>Доставка и страховка до границы ЕАЭС</td><td class="num">${fmt(r.delivery)}</td><td>ваша сумма; по ДТ входит в таможенную стоимость (ТК ЕАЭС ст. 40)</td><td></td></tr>`);
-    if (market) lines.push(`<tr><td>Рыночные расходы (оценка)</td><td class="num">${fmt(r.market)}</td><td>ОГПО, брокер, СВХ, СБКТС, ЭПТС — рыночные диапазоны</td><td></td></tr>`);
+    if (market) lines.push(`<tr><td>Рыночные расходы (оценка)</td><td class="num">${fmt(r.market)}</td><td>ОГПО, брокер, СВХ, СБКТС, ЭПТС, банк 0,5%, посредник за рубежом $500 — рыночные диапазоны</td><td></td></tr>`);
     $("#route-table").innerHTML = `<thead><tr><th>Платёж</th><th class="num">Сумма, тг</th><th>Норма</th><th>Как сэкономить</th></tr></thead><tbody>${lines.join("")}</tbody>`;
     $("#route-flags").innerHTML = r.flags.map((f) => `<div class="flag">${esc(f)}</div>`).join("");
     $("#route-tax").textContent = `После регистрации — налог на транспорт около ${fmt(r.tax_year)} тг в год (НК ст. 565).`;
@@ -353,7 +353,7 @@
     $("#vh-who").textContent = `Ставка пошлины: ${r["ставка_пошлины"]} · регистрирует ${r["регистрирует"]}`;
     $("#vh-lines").innerHTML = `<thead><tr><th>Платёж</th><th class="num">Сумма, тг</th><th>Норма</th></tr></thead><tbody>` +
       VH_LINES.filter(([key]) => r[key] > 0).map(([key, label, norm]) => `<tr><td>${label}</td><td class="num">${fmt(r[key])}</td><td>${esc(norm)}</td></tr>`).join("") +
-      `<tr class="total"><td>Итого обязательные</td><td class="num">${fmt(r["итого_обязательные"])}</td><td></td></tr><tr><td>Доставка и рыночные расходы (оценка)</td><td class="num">${fmt(r["доставка_кзт"] + r["рыночные_оценка"])}</td><td>доставка; брокер, СВХ, СБКТС или сертификат, ОГПО</td></tr></tbody>`;
+      `<tr class="total"><td>Итого обязательные</td><td class="num">${fmt(r["итого_обязательные"])}</td><td></td></tr><tr><td>Доставка и рыночные расходы (оценка)</td><td class="num">${fmt(r["доставка_кзт"] + r["рыночные_оценка"])}</td><td>доставка; брокер, СВХ, СБКТС или сертификат, ОГПО, банк 0,5%, посредник за рубежом $500</td></tr></tbody>`;
     $("#vh-flags").innerHTML = r["примечания"].split("; ").filter(Boolean).map((f) => `<div class="flag">${esc(f)}</div>`).join("");
     try { localStorage.setItem(VH_STORE, JSON.stringify({ ...Object.fromEntries(VH_FIELDS.map((id) => [id, $("#" + id).value])), eco4: $("#vh-eco4").checked, electric: $("#vh-electric").checked })); } catch { /* нет хранилища */ }
   }

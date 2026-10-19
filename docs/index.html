@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Unbounded:wght@500;600&display=swap">
-<link rel="stylesheet" href="style.css?v=1.7.0">
+<link rel="stylesheet" href="style.css?v=1.7.1">
 </head>
 <body>
 <header class="top">
@@ -85,7 +85,7 @@
               <div class="field"><label for="month">Месяц выпуска</label><select id="month"></select></div>
             </div>
             <label class="check"><input type="checkbox" id="market"> Добавить доставку и рыночные расходы</label>
-            <p class="hint">Сама доставка, ОГПО, брокер, СВХ, СБКТС, ЭПТС — по серединам рыночных диапазонов, это не госплатежи.</p>
+            <p class="hint">Сама доставка, ОГПО, брокер, СВХ, СБКТС, ЭПТС, комиссия банка 0,5% и посредник за рубежом $500 — по серединам рыночных диапазонов, это не госплатежи.</p>
             <button type="button" class="btn" id="share">Скопировать ссылку на расчёт</button>
             <p class="hint" id="share-status" aria-live="polite"></p>
           </form>
@@ -190,7 +190,7 @@
       <div class="stack">
         <div class="card">
           <h2 class="section-title">Что выгодно ввезти, а что дешевле купить в Казахстане</h2>
-          <p class="lede">Для каждой модели и года: медиана объявлений за рубежом + вывоз и доставка + все платежи по самому дешёвому маршруту + брокер, СВХ, СБКТС — против медианы тех же модели и года на Kolesa.kz.</p>
+          <p class="lede">Для каждой модели и года: медиана объявлений за рубежом + вывоз и доставка + все платежи по самому дешёвому маршруту + брокер, СВХ, СБКТС, ЭПТС, банк и посредник — против медианы тех же модели и года на Kolesa.kz.</p>
           <p class="note" id="dl-meta"></p>
           <div class="seg" id="dl-cat" style="margin-top:10px"></div>
         </div>
@@ -316,9 +316,9 @@
 </main>
 <footer><div class="wrap"><span>Автор — TAS · Aseke</span><span>Бесплатно, в помощь всем</span><span id="asof-foot">Ставки сверены 15.10.2026</span><span>Справочный расчёт, не официальная позиция госорганов</span><a href="https://github.com/aslantuk-bit/kz-auto-import">Исходники на GitHub</a></div></footer>
 <div class="tip" id="tip" hidden></div>
-<script src="calc.js?v=1.7.0"></script>
-<script src="tips.js?v=1.7.0"></script>
-<script src="vehicles.js?v=1.7.0"></script>
-<script src="app.js?v=1.7.0"></script>
+<script src="calc.js?v=1.7.1"></script>
+<script src="tips.js?v=1.7.1"></script>
+<script src="vehicles.js?v=1.7.1"></script>
+<script src="app.js?v=1.7.1"></script>
 </body>
 </html>

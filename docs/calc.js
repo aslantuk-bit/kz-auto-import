@@ -115,8 +115,9 @@
       r.abroad = r.duty_abroad + r.vat_abroad + r.fees_abroad;
       r.total = r.duty + r.etp + r.customs_fee + r.excise_cc + r.excise_lux + r.vat + r.abroad + r.util + r.reg_fee + r.docs;
       let market = K.MARKET["ОГПО_год"] + (c.mode === "ДТ" || c.mode === "ПТД" ? K.MARKET["брокер"] + K.MARKET["СВХ"] : 0);
-      if (c.mode === "ДТ" || c.mode === "ПТД") market += K.MARKET["СБКТС"] + (c.mode === "ПТД" ? K.MARKET["ЭПТС"] : 0);
+      if (c.mode === "ДТ" || c.mode === "ПТД") market += K.MARKET["СБКТС"] + K.MARKET["ЭПТС"];
       if (transit(c)) { const a = K.ABROAD[country(c)]; market += a["посредник_eur"] * K.EUR + a["перегон_кзт"] + K.MARKET["СБКТС"] + K.MARKET["ЭПТС"]; }
+      market += K.BANK_PCT * v + (c.origin === "третьи" ? K.AGENT_KZT : 0);
       r.market = market;
       r.delivery = delivery(c) * K.EUR;
       r.total_market = r.total + market + r.delivery;

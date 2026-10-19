@@ -49,7 +49,7 @@ def records(df):
 def constants():
     return {
         "MRP": calc.MRP, "EUR": calc.EUR, "VAT": calc.VAT, "CUSTOMS_FEE_MRP": calc.CUSTOMS_FEE_MRP,
-        "LUX_THRESHOLD": calc.LUX_THRESHOLD, "MARKET": calc.MARKET, "DELIVERY_EUR": calc.DELIVERY_EUR, "MRP_YEAR": calc.MRP_YEAR,
+        "LUX_THRESHOLD": calc.LUX_THRESHOLD, "MARKET": calc.MARKET, "BANK_PCT": calc.BANK_PCT, "AGENT_KZT": calc.AGENT_KZT, "DELIVERY_EUR": calc.DELIVERY_EUR, "MRP_YEAR": calc.MRP_YEAR,
         "ABROAD": calc.ABROAD, "BLOCKING": calc.BLOCKING,
         "ETT_PETROL_EDGES": calc.ETT_PETROL_EDGES, "ETT_PETROL_MIN_3_7": calc.ETT_PETROL_MIN_3_7,
         "ETT_PETROL_OVER7": calc.ETT_PETROL_OVER7, "ETT_DIESEL_EDGES": calc.ETT_DIESEL_EDGES,
