@@ -9,6 +9,7 @@ textColor = "#1f2328"
 toolbarMode = "minimal"
 
 [server]
+address = "127.0.0.1"
 port = 8790
 headless = true
 
